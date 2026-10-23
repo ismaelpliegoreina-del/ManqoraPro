@@ -2134,7 +2134,7 @@ const ov=(r,o)=>{Object.keys(o).forEach(k=>{if(o[k]===undefined)delete o[k]});re
 const T=[
 {k:'team',t:'employees',pin:['pinHash','pinSalt','fails','pinLocked'],
  to:e=>({name:String(e.name||'Sin nombre'),color:e.color||null,commission_pct:Math.min(100,Math.max(0,num(e.commission))),schedule:e.schedule||{},active:e.active!==false,data:strip(e,['pinHash','pinSalt','fails','pinLocked'])}),
- from:r=>ov(r,{name:r.name,color:r.color||undefined,commission:num(r.commission_pct),schedule:r.schedule,active:r.active,role:(r.data||{}).role||'staff'})},
+ from:r=>ov(r,{name:r.name,color:r.color||undefined,commission:num(r.commission_pct),schedule:Object.assign(defSched(),r.schedule||{}),active:r.active,role:(r.data||{}).role||'staff'})},
 {k:'services',t:'services',
  to:s=>({name:String(s.name||'Servicio'),duration_min:Math.min(480,Math.max(5,Math.round(num(s.duration,30)))),price:Math.max(0,num(s.price)),active:s.active!==false,data:s}),
  from:r=>ov(r,{name:r.name,price:num(r.price),duration:r.duration_min,active:r.active})},
@@ -2143,7 +2143,7 @@ const T=[
  from:r=>ov(r,{name:r.name,price:num(r.price),active:r.active})},
 {k:'clients',t:'clients',
  to:c=>({name:String(c.name||'').trim()||'Sin nombre',phone:c.phone||null,email:c.email||null,notes:c.notes||null,noshows:Math.max(0,Math.round(num(c.noshows))),loyalty:c.loyalty||{},data:c}),
- from:r=>ov(r,{name:r.name,phone:r.phone||'',email:r.email||'',notes:r.notes||'',noshows:r.noshows,loyalty:(r.loyalty&&Object.keys(r.loyalty).length)?r.loyalty:undefined})},
+ from:r=>ov(r,{name:r.name,phone:r.phone||'',email:r.email||'',notes:r.notes||'',noshows:r.noshows,loyalty:Object.assign({stamps:0,rewards:0,redeemed:0,earned:0,log:[]},r.loyalty||{})})},
 {k:'products',t:'products',
  to:p=>({name:String(p.name||'Producto'),supplier:p.supplier||null,stock:Math.round(num(p.stock)),min_stock:Math.max(0,Math.round(num(p.min))),cost:Math.max(0,num(p.cost)),sale:Math.max(0,num(p.sale)),active:p.active!==false,data:p}),
  from:r=>ov(r,{name:r.name,supplier:r.supplier||'',stock:r.stock,min:r.min_stock,cost:num(r.cost),sale:num(r.sale)})},
@@ -2229,7 +2229,7 @@ async function pushOne(s,it,row,j){const snap=CL.snap[s.t],id=it.id,tid=CL.tid,k
       if(s.t==='sales'&&res.data.receipt_no&&it.receiptNo!==res.data.receipt_no){it.receiptNo=res.data.receipt_no;rebuildReceipts();row=s.to(it);j=JSON.stringify(row)}}}
   else{const body=s.t==='sales'?{data:row.data}:row;res=await CL.sb.from(s.t).update(body).eq('tenant_id',tid).eq('app_id',id).select('id');
     if(!res.error&&(!res.data||!res.data.length))res.error={code:'42501',message:'sin permiso'}}
-  if(res.error){if(isNet(res.error)){CL.offline=true;throw res.error}toast(errMsg(res.error));CL.revert.add(key);return false}
+  if(res.error){if(isNet(res.error)){CL.offline=true;throw res.error}console.warn('sync',s.t,res.error);toast(errMsg(res.error));CL.revert.add(key);return false}
   snap.set(id,j);return true}
 async function pushDel(s,id){const res=await CL.sb.from(s.t).delete().eq('tenant_id',CL.tid).eq('app_id',id).select('id');
   if(res.error){if(isNet(res.error)){CL.offline=true;throw res.error}toast(errMsg(res.error));CL.revert.add(s.t+':'+id);return false}
