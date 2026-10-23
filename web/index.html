@@ -113,7 +113,25 @@ details p{margin:0 0 16px;color:var(--mut)}
 footer{padding:40px 0 50px;color:var(--mut);font-size:14px}
 footer .in{display:flex;flex-wrap:wrap;gap:12px 26px;justify-content:space-between;align-items:center}
 footer a{color:var(--mut);margin-right:16px}
+.ph{border-radius:var(--r);overflow:hidden;background:var(--gs);position:relative}
+.ph img{width:100%;height:100%;object-fit:cover}
+.human{display:grid;grid-template-columns:1fr 1.1fr;gap:48px;align-items:center}
+.human .pics{display:grid;grid-template-columns:1.2fr 1fr;gap:14px}
+.human .pics .ph{aspect-ratio:4/5}
+.human .pics .ph:nth-child(2){margin-top:44px}
+.human p{color:var(--mut)}
+.human .sign{margin-top:18px;font-weight:700;color:var(--ink)}
+.plain{display:grid;grid-template-columns:repeat(2,1fr);gap:6px 48px;max-width:900px;margin:0 auto}
+.plain div{padding:16px 0;border-bottom:1px solid var(--line)}
+.plain h3{font-size:18px;margin-bottom:3px}
+.plain p{margin:0;color:var(--mut);font-size:16px}
+.final.photo{background:linear-gradient(rgba(0,100,58,.82),rgba(0,100,58,.82)),var(--bg) center/cover;color:#fff}
+.final.photo .btn{color:var(--gd)}
+.credits{font-size:12.5px;color:var(--mut);margin-top:18px}
+.credits a{margin:0;color:var(--mut)}
 @media(max-width:900px){
+ .human{grid-template-columns:1fr;gap:30px}
+ .plain{grid-template-columns:1fr}
  nav ul{display:none}
  .hero .grid,.split{grid-template-columns:1fr;gap:34px}
  .split.rev .txt{order:0}
@@ -137,9 +155,9 @@ footer a{color:var(--mut);margin-right:16px}
 
 <header class="hero"><div class="wrap grid">
   <div>
-    <span class="eyebrow">Para barberías y peluquerías</span>
-    <h1 style="margin-top:18px">Tu agenda y tus reservas online. <span>Sin cuota mensual.</span></h1>
-    <p class="lead">Reservas las 24 horas con tu marca, agenda por profesional y el control de tu negocio en un solo panel. Pagas una vez y tus clientes son siempre tuyos.</p>
+    <span class="eyebrow">Para barberías y peluquerías pequeñas</span>
+    <h1 style="margin-top:18px">Que tus clientes reserven solos y <span>tú te dediques a cortar.</span></h1>
+    <p class="lead">Una página de reservas con el nombre de tu barbería, una agenda donde cada profesional ve su día y la caja al día sin hojas de cálculo. Lo pagas una vez y no hay mensualidad detrás.</p>
     <div class="cta">
       <a class="btn" href="mailto:hola@tonsora.es?subject=Quiero%20una%20demo%20de%20Tonsora%20Pro">Pide tu demo gratis</a>
       <a class="btn ghost" href="../reservas.html?n=demo-prueba">Prueba la reserva online →</a>
@@ -154,58 +172,69 @@ footer a{color:var(--mut);margin-right:16px}
 
 <div class="strip"><div class="wrap in">
   <div><b>0 €</b><span>de comisión por cita</span></div>
-  <div><b>24 h</b><span>reservas online con tu marca</span></div>
+  <div><b>24 h</b><span>tus clientes reservan cuando quieren</span></div>
   <div><b>1 pago</b><span>y una cuota anual mínima</span></div>
-  <div><b>0</b><span>dobles reservas: el sistema las impide</span></div>
+  <div><b>0</b><span>citas pisadas: el sistema no lo deja</span></div>
 </div></div>
 
+<section class="soft"><div class="wrap human">
+  <div class="pics">
+    <div class="ph"><img src="https://images.unsplash.com/photo-1672642150228-3fcd5826ec26?auto=format&fit=crop&w=700&q=70&h=875" alt="Un barbero cortando el pelo a un cliente" loading="lazy" onerror="this.parentNode.hidden=true"></div>
+    <div class="ph"><img src="https://images.unsplash.com/photo-1634480258143-ffb5e6df0029?auto=format&fit=crop&w=600&q=70&h=750" alt="Peluquero trabajando frente al espejo" loading="lazy" onerror="this.parentNode.hidden=true"></div>
+  </div>
+  <div>
+    <h2>Seguro que te suena: el móvil sonando con el cliente en la silla</h2>
+    <p style="margin-top:16px">Cortar el pelo y contestar mensajes a la vez no sale bien. Con Tonsora Pro el cliente mira los huecos libres, elige y reserva. Tú te enteras en la agenda, sin soltar las tijeras.</p>
+    <p>Está hecho para locales pequeños, de dos a cinco sillones, donde el dueño también trabaja. Por eso es sencillo y no te cobra cada mes por usarlo.</p>
+    <div class="sign">Y si te atascas, te contesta una persona, no un robot.</div>
+  </div>
+</div></section>
+
 <section id="funciones"><div class="wrap">
-  <div class="head"><span class="eyebrow">Todo en uno</span><h2 style="margin-top:14px">Menos llamadas, menos papeles, más sillones ocupados</h2><p>Lo que necesitas para llevar el día a día de tu local, sin pagar de más por funciones que no usas.</p></div>
+  <div class="head"><h2>Cómo es el día a día con Tonsora Pro</h2><p>Tres cosas que cambian desde la primera semana.</p></div>
 
   <div class="split">
     <div class="txt">
-      <h2>Tus clientes reservan solos, a cualquier hora</h2>
-      <p>Una página de reservas con tu logo, tus fotos y tus servicios. Compártela en Instagram, WhatsApp o Google y deja de contestar mensajes para dar cita.</p>
-      <ul><li>Eligen servicio, profesional, día y hora libre</li><li>Confirmación y recordatorio por email, automáticos</li><li>Pueden cambiar o cancelar su cita hasta el plazo que tú fijes</li><li>Solo se ofrecen horas realmente libres</li></ul>
+      <h2>Reservan por la noche, tú lo ves por la mañana</h2>
+      <p>Una página con tu logo, tus fotos y tus precios. Pones el enlace en Instagram, en WhatsApp o en Google y la gente reserva sin escribirte.</p>
+      <ul><li>Eligen servicio, barbero, día y hora</li><li>Les llega un email de confirmación y otro de recordatorio</li><li>Pueden cambiar o cancelar hasta el plazo que tú pongas</li><li>Solo ven los huecos que de verdad tienes libres</li></ul>
     </div>
     <div class="frame phoneframe"><img src="reserva-movil.jpg" alt="Reserva online en el móvil" loading="lazy" width="780" height="1600"></div>
   </div>
 
   <div class="split rev">
     <div class="txt">
-      <h2>Una agenda clara, por profesional</h2>
-      <p>Ves el día o la semana de cada barbero de un vistazo, con huecos libres, vacaciones y bloqueos. Las citas online aparecen solas.</p>
-      <ul><li>Un profesional nunca tiene dos citas a la vez</li><li>Bloquea tramos, días libres y horarios especiales</li><li>Detecta huecos muertos y te ayuda a rellenarlos</li><li>Funciona en el ordenador, la tablet y el móvil</li></ul>
+      <h2>Cada uno ve su día, sin preguntar a nadie</h2>
+      <p>El día o la semana de cada profesional en una pantalla, con los huecos, las vacaciones y los descansos. Las citas que llegan por internet aparecen solas.</p>
+      <ul><li>Nadie puede tener dos citas a la misma hora</li><li>Bloqueas un rato, un día o un horario especial en dos clics</li><li>Te avisa de los huecos sueltos para que los rellenes</li><li>Se abre igual en el ordenador, la tablet y el móvil</li></ul>
     </div>
     <div class="frame"><img src="panel-agenda.jpg" alt="Agenda por profesional" loading="lazy" width="1360" height="820"></div>
   </div>
 
   <div class="split">
     <div class="txt">
-      <h2>Cobra y controla tu negocio sin hojas de cálculo</h2>
-      <p>Cobros con ticket, caja diaria, comisiones por barbero, gastos, stock e IVA. Todo conectado a tu agenda.</p>
-      <ul><li>Cobro en efectivo, tarjeta o Bizum, con recibo</li><li>Cierre de caja y comisiones de cada profesional</li><li>Fidelización con sellos y recompensas</li><li>Un asistente que responde sobre tus propios datos</li></ul>
+      <h2>A fin de mes, las cuentas ya están hechas</h2>
+      <p>Cuando cobras una cita queda apuntada la venta, la comisión del barbero y el stock que has gastado. No hay que copiar nada a mano.</p>
+      <ul><li>Efectivo, tarjeta o Bizum, con recibo numerado</li><li>Cierre de caja diario y comisión de cada profesional</li><li>Tarjeta de sellos para los clientes de siempre</li><li>Un asistente al que preguntas por tus propios números</li></ul>
     </div>
     <div class="frame"><img src="panel-dashboard.jpg" alt="Resumen del día en el panel" loading="lazy" width="1360" height="820"></div>
   </div>
 </div></section>
 
 <section class="soft"><div class="wrap">
-  <div class="head"><h2>Y además, lo que usarías cada semana</h2></div>
-  <div class="cards">
-    <div class="card"><div class="ic">👥</div><h3>Ficha de clientes</h3><p>Historial, notas y últimos servicios. Detecta a quién conviene recontactar.</p></div>
-    <div class="card"><div class="ic">📥</div><h3>Importa tus clientes</h3><p>Trae tu lista desde un archivo de Excel o CSV y empieza sin perder a nadie.</p></div>
-    <div class="card"><div class="ic">🔐</div><h3>Permisos por rol</h3><p>Propietario, encargado y empleado: cada uno ve solo lo que debe.</p></div>
-    <div class="card"><div class="ic">📦</div><h3>Stock y gastos</h3><p>Avisos de reposición y control de lo que entra y sale.</p></div>
-    <div class="card"><div class="ic">🧾</div><h3>IVA y recibos</h3><p>Resumen fiscal y recibos numerados para tu gestoría.</p></div>
-    <div class="card"><div class="ic">⭐</div><h3>Fidelización</h3><p>Sellos y premios para que tus clientes vuelvan.</p></div>
-    <div class="card"><div class="ic">✉️</div><h3>Emails automáticos</h3><p>Confirmación, cambio, cancelación y recordatorio con tu marca.</p></div>
-    <div class="card"><div class="ic">💾</div><h3>Copia de seguridad</h3><p>Tus datos protegidos y descargables cuando quieras.</p></div>
+  <div class="head"><h2>Y lo pequeño que se agradece</h2></div>
+  <div class="plain">
+    <div><h3>Fichas de clientes</h3><p>Qué se hizo la última vez y cuánto hace que no vienen.</p></div>
+    <div><h3>Traes tu lista de clientes</h3><p>Desde Excel o CSV, para no empezar de cero.</p></div>
+    <div><h3>Cada uno, lo suyo</h3><p>Dueño, encargado y empleado ven solo lo que les toca.</p></div>
+    <div><h3>Stock y gastos</h3><p>Te avisa cuando se acaba la cera o el aceite de barba.</p></div>
+    <div><h3>IVA y recibos</h3><p>Un resumen que puedes pasar tal cual a tu gestoría.</p></div>
+    <div><h3>Copia de tus datos</h3><p>La descargas cuando quieras. Son tuyos.</p></div>
   </div>
 </div></section>
 
 <section id="comparativa"><div class="wrap">
-  <div class="head"><span class="eyebrow">Cuánto cuesta de verdad</span><h2 style="margin-top:14px">Pagar una vez frente a pagar cada mes</h2><p>Una comparación con una suscripción mensual como la de Booksy, con sus precios publicados.</p></div>
+  <div class="head"><h2>Haz la cuenta a tres años</h2><p>Comparado con una suscripción mensual como la de Booksy, con los precios que publican ellos.</p></div>
   <table class="cmp">
     <thead><tr><th></th><th class="us">Tonsora Pro</th><th>Suscripción mensual (Booksy)</th></tr></thead>
     <tbody>
@@ -219,20 +248,20 @@ footer a{color:var(--mut);margin-right:16px}
     </tbody>
   </table>
   <p class="note">Precios de Booksy según <a href="https://biz.booksy.com/es-es/precios" rel="noopener" target="_blank">su web</a>, consultados el 23/10/2026; IVA no incluido. Tonsora Pro: 590 € de pago único más 50 € al año, IVA no incluido; a 3 años se cuentan tres cuotas.</p>
-  <div class="save">En tres años, con un solo profesional, ahorras unos 520 €. Con tres profesionales, más de 1.090 €.</div>
+  <div class="save">Con un solo profesional ahorras unos 520 € en tres años. Con tres, más de 1.090 €.</div>
 </div></section>
 
 <section class="soft"><div class="wrap">
-  <div class="head"><h2>Cómo empezamos</h2><p>No tienes que saber de informática.</p></div>
+  <div class="head"><h2>Cómo empezamos</h2><p>No hace falta que sepas de informática. Nos sentamos contigo y lo montamos.</p></div>
   <div class="steps">
-    <div class="step"><h3>Lo dejamos listo contigo</h3><p>Configuramos tus servicios, horarios, equipo, logo y fotos. Si ya tienes clientes en otra herramienta, los importamos.</p></div>
-    <div class="step"><h3>Compartes tu enlace</h3><p>Lo pones en Instagram, WhatsApp y Google. Tus clientes empiezan a reservar solos.</p></div>
-    <div class="step"><h3>Gestionas desde el panel</h3><p>Agenda, cobros y números del negocio en el ordenador o el móvil. Te ayudamos cuando lo necesites.</p></div>
+    <div class="step"><h3>Lo dejamos listo contigo</h3><p>Tú nos cuentas tus servicios, horarios y equipo, y nos pasas tu logo y tus fotos. Si tienes clientes en otra app, los traemos.</p></div>
+    <div class="step"><h3>Compartes tu enlace</h3><p>Lo pones en tu Instagram, en WhatsApp y en Google. A partir de ahí, la gente reserva sin llamarte.</p></div>
+    <div class="step"><h3>Gestionas desde el panel</h3><p>Agenda, cobros y números, desde el ordenador o el móvil. Si algo no te cuadra, nos escribes.</p></div>
   </div>
 </div></section>
 
 <section id="precio"><div class="wrap">
-  <div class="head"><span class="eyebrow">Precio</span><h2 style="margin-top:14px">Un pago y una cuota pequeña</h2><p>Sin permanencia ni letra pequeña. Lo que pagas es lo que hay.</p></div>
+  <div class="head"><span class="eyebrow">Precio</span><h2 style="margin-top:14px">Un pago y una cuota pequeña</h2><p>Sin permanencia. Lo que ves aquí es lo que pagas.</p></div>
   <div class="price">
     <div class="big">590 € <small>pago único</small></div>
     <p class="yr">+ 50 € al año de mantenimiento</p>
@@ -253,20 +282,20 @@ footer a{color:var(--mut);margin-right:16px}
 <section class="soft" id="preguntas"><div class="wrap">
   <div class="head"><h2>Preguntas frecuentes</h2></div>
   <div class="faq">
-    <details><summary>¿Pago por cada cita o por cada cliente nuevo?</summary><p>No. No hay comisiones por cita. Pagas el pago único y la cuota anual de mantenimiento, nada más.</p></details>
+    <details><summary>¿Pago por cada cita o por cada cliente nuevo?</summary><p>No. No cobramos nada por cita ni por cliente. Pagas una vez y luego la cuota del año.</p></details>
     <details><summary>¿Qué incluye la cuota anual?</summary><p>Alojamiento, mantenimiento, actualizaciones, copia de seguridad y soporte por email. Las mejoras que no sean arreglos se presupuestan aparte.</p></details>
     <details><summary>¿Puedo traer mis clientes de otra aplicación?</summary><p>Sí. Si puedes exportarlos a un archivo de Excel o CSV, los importamos al empezar.</p></details>
-    <details><summary>¿Necesito saber de informática?</summary><p>No. Lo configuramos contigo y el panel está pensado para usarse desde el primer día.</p></details>
+    <details><summary>¿Necesito saber de informática?</summary><p>No. No. Lo montamos contigo y el primer día ya puedes apuntar citas.</p></details>
     <details><summary>¿Qué pasa con los datos de mis clientes?</summary><p>Son tuyos. Firmamos contigo el contrato de encargado del tratamiento que exige el RGPD, y puedes descargar una copia de seguridad cuando quieras.</p></details>
-    <details><summary>¿Me traéis clientes nuevos, como un marketplace?</summary><p>No. Tonsora Pro no es un marketplace: es tu propia web de reservas. Tus clientes llegan por tu Instagram, tu WhatsApp y Google, y no pagas por ellos.</p></details>
+    <details><summary>¿Me traéis clientes nuevos, como un marketplace?</summary><p>No, y mejor que lo sepas desde el principio. Esto es tu propia página de reservas: los clientes llegan por tu Instagram, tu WhatsApp y Google. A cambio, no pagas por cada uno que llega.</p></details>
     <details><summary>¿Funciona en el móvil?</summary><p>Sí, tanto la página de reservas de tus clientes como el panel de gestión.</p></details>
   </div>
 </div></section>
 
 <section style="padding-top:40px"><div class="wrap" style="padding:0">
-  <div class="final">
-    <h2>¿Lo vemos en tu barbería?</h2>
-    <p>Te enseñamos el panel en directo y te decimos qué necesitas para empezar.</p>
+  <div class="final photo" style="--bg:url(https://images.unsplash.com/photo-1634480257305-7f4ca3582e6a?auto=format&fit=crop&w=1400&q=70)">
+    <h2>¿Lo vemos juntos con tu local?</h2>
+    <p>Escríbenos, te enseñamos el panel funcionando y te decimos con sinceridad si te encaja o no.</p>
     <a class="btn" href="mailto:hola@tonsora.es?subject=Quiero%20una%20demo%20de%20Tonsora%20Pro">Pide tu demo gratis</a>
   </div>
 </div></section>
@@ -274,6 +303,7 @@ footer a{color:var(--mut);margin-right:16px}
 <footer><div class="wrap in">
   <div><b>Tonsora Pro</b> · booking &amp; management<br>hola@tonsora.es</div>
   <div><a href="#">Aviso legal</a><a href="#">Privacidad</a><a href="#">Cookies</a></div>
-</div></footer>
+</div>
+<div class="wrap credits">Fotos de <a href="https://unsplash.com/@reddfrancisco" rel="noopener">Redd Francisco</a> y <a href="https://unsplash.com/@hairspies" rel="noopener">Hair Spies</a> en <a href="https://unsplash.com" rel="noopener">Unsplash</a>. Son imágenes de ambientación, no de clientes ni de locales que usen Tonsora Pro.</div></footer>
 </body>
 </html>
