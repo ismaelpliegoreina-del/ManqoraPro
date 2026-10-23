@@ -14,6 +14,13 @@ header.top{background:var(--brand);color:#fff;padding:22px 16px}
 header.top .in{max-width:640px;margin:0 auto}
 header.top h1{margin:0 0 4px;font-size:22px}
 header.top p{margin:0;color:#cbd5e1;font-size:14px}
+header.top.hero{background:linear-gradient(180deg,rgba(11,18,32,.45),rgba(11,18,32,.88)),var(--hero) center 60%/cover;padding:24px 16px 34px}
+.lp{display:inline-block;background:#fff;border-radius:14px;padding:8px 12px;margin-bottom:14px;box-shadow:0 8px 24px rgba(0,0,0,.35)}
+.lp img{height:84px;width:auto;display:block}
+.maps{display:inline-block;margin-top:10px;color:#fff;font-size:14px;font-weight:600;text-decoration:none;border:1.5px solid rgba(255,255,255,.55);border-radius:999px;padding:6px 14px}
+.local h2{font-size:17px;margin:0 0 10px}
+.gal{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.gal img{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:14px;display:block;background:#e5e7eb}
 .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin-top:14px}
 .card h2{margin:0 0 10px;font-size:17px;display:flex;gap:8px;align-items:center}
 .num{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--accent);color:#fff;font-size:13px}
@@ -49,8 +56,9 @@ footer a{color:inherit}
 </style>
 </head>
 <body>
-<header class="top"><div class="in"><h1 id="biz">Reserva tu cita</h1><p id="bizsub">&nbsp;</p></div></header>
+<header class="top" id="top"><div class="in"><div class="lp" id="lp" hidden></div><h1 id="biz">Reserva tu cita</h1><p id="bizsub">&nbsp;</p><a class="maps" id="maps" target="_blank" rel="noopener" hidden>📍 Cómo llegar</a></div></header>
 <main class="wrap" id="app"><div class="card"><p class="muted">Cargando…</p></div></main>
+<section class="wrap local" id="local" hidden style="padding-top:0"></section>
 <footer>Reservas gestionadas con Tonsora Pro · <a id="lg" href="index.html#legal=priv" target="_blank" rel="noopener">Privacidad</a></footer>
 
 <script>
@@ -79,13 +87,20 @@ async function rpc(name,args){
 }
 const S={biz:null,service:null,emp:null,addons:[],day:'',slots:null,slot:null,name:'',phone:'',email:'',priv:false,mkt:false,busy:false,msg:'',done:null,loading:false};
 
+const safeImg=p=>/^(assets\/[a-z0-9_-]+\/[A-Za-z0-9._-]+|https:\/\/[^\s"'<>()]+)$/i.test(String(p||''))?String(p):'';
+function brand(b){const bz=b.business||{},logo=safeImg(bz.logo),hero=safeImg(bz.hero),ph=(bz.photos||[]).map(safeImg).filter(Boolean).slice(0,4);
+  if(hero){const t=document.getElementById('top');t.classList.add('hero');t.style.setProperty('--hero','url("'+hero+'")')}
+  if(logo){const l=document.getElementById('lp');l.innerHTML='<img alt="'+esc(b.name)+'" src="'+esc(logo)+'">';l.hidden=false}
+  if(bz.address){const m=document.getElementById('maps');m.href='https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(bz.address);m.hidden=false}
+  if(ph.length||bz.address){const s=document.getElementById('local');
+    s.innerHTML='<div class="card"><div class="local"><h2>Nuestro local</h2>'+(ph.length?'<div class="gal">'+ph.map(u=>'<img loading="lazy" alt="Interior de '+esc(b.name)+'" src="'+esc(u)+'">').join('')+'</div>':'')+(bz.address?'<p class="muted" style="margin:12px 0 0">📍 '+esc(bz.address)+(bz.phone?' · 📞 '+esc(bz.phone):'')+'</p>':'')+'</div></div>';s.hidden=false}}
 async function init(){
   if(!SLUG){document.getElementById('biz').textContent='Reservas';document.getElementById('bizsub').textContent='';app.innerHTML='<div class="card"><p>Falta indicar el negocio. Usa el enlace de reservas que te ha dado tu peluquería.</p></div>';return}
   const b=await rpc('public_business',{p_slug:SLUG});
   if(!b||!b.ok){app.innerHTML='<div class="card"><p>'+esc(ERR[b&&b.error]||ERR.unavailable)+'</p></div>';return}
   S.biz=b;document.title='Reserva · '+b.name;document.getElementById('biz').textContent=b.name;
   const ad=b.business&&b.business.address,ph=b.business&&b.business.phone;
-  document.getElementById('bizsub').textContent=[ad,ph].filter(Boolean).join(' · ')||'Reserva online';
+  document.getElementById('bizsub').textContent=[ad,ph].filter(Boolean).join(' · ')||'Reserva online';brand(b);
   if(CODE)return miCita();
   if(!b.bookable){app.innerHTML='<div class="card"><div class="msg warn">Las reservas online están cerradas temporalmente. Puedes llamar al negocio'+(ph?' al <b>'+esc(ph)+'</b>':'')+'.</div></div>';return}
   render();
