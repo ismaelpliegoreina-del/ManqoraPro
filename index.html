@@ -2279,7 +2279,7 @@ isLogged=function(){return !!CL.ses};
   sched();return true}}
 
 /* ---------- entrada pública: ahora es reservas.html ---------- */
-const PUBURL=()=>'reservas.html?n='+encodeURIComponent(SB.slug||'');
+const PUBURL=()=>'reservas.html?n='+encodeURIComponent(CL.slug||SB.slug||'');
 showPublic=function(){window.open(PUBURL(),'_blank')};
 {const _r=route;route=function(){const m=/^#cita=([A-Za-z0-9]{8,64})$/.exec(location.hash);if(m){location.replace(PUBURL()+'&cita='+m[1]);return}_r()}}
 
@@ -2298,9 +2298,9 @@ async function start(ses){
     CL.ses=ses;CL.uid=ses.user.id;
     const{data:ms,error:e1}=await CL.sb.from('members').select('role,employee_id,active,tenant_id,tenants(id,slug,name,license_status,cancel_min_hours)').eq('user_id',CL.uid).eq('active',true);
     if(e1)throw e1;
-    const m=(ms||[]).find(x=>x.tenants&&x.tenants.slug===SB.slug)||null;
+    const m=(ms||[]).find(x=>x.tenants&&(!SB.slug||x.tenants.slug===SB.slug))||null;
     if(!m){await CL.sb.auth.signOut();CL.ses=null;lmsg('Tu usuario no tiene acceso a este negocio. Contacta con quien te dio de alta.');return}
-    CL.tid=m.tenant_id;CL.role=m.role;CL.tname=m.tenants.name;CL.hours=m.tenants.cancel_min_hours;
+    CL.tid=m.tenant_id;CL.slug=m.tenants.slug;CL.role=m.role;CL.tname=m.tenants.name;CL.hours=m.tenants.cancel_min_hours;
     const d={business:{name:CL.tname},settings:{},team:[],services:[],upsells:[],clients:[],appointments:[],sales:[],products:[],expenses:[],closures:[],waitlist:[],blocks:[],receipts:[],passes:[],clientsArchive:[],productsArchive:[],inventory:[],notices:[],outbox:[]};
     db=d;T.forEach(s=>{CL.idm[s.t]={};CL.rev[s.t]={};CL.snap[s.t]=new Map();CL.cur[s.t]=null});
     const{data:ts}=await CL.sb.from('tenant_settings').select('business,settings,updated_at').eq('tenant_id',CL.tid).maybeSingle();

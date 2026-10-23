@@ -59,7 +59,7 @@ footer a{color:inherit}
 const SB_URL='https://jiokzzzdepinumbrjalm.supabase.co';
 const SB_KEY='sb_publishable_ITxafkZCiuhtCUTvxPSZJA_CerS0vtY';
 const qs=new URLSearchParams(location.search);
-const SLUG=(qs.get('n')||'gloria-bendita').toLowerCase().replace(/[^a-z0-9-]/g,'');
+const SLUG=(qs.get('n')||'').toLowerCase().replace(/[^a-z0-9-]/g,'');
 const CODE=(qs.get('cita')||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
 const TZ='Europe/Madrid';
 const app=document.getElementById('app');
@@ -80,6 +80,7 @@ async function rpc(name,args){
 const S={biz:null,service:null,emp:null,addons:[],day:'',slots:null,slot:null,name:'',phone:'',email:'',priv:false,mkt:false,busy:false,msg:'',done:null,loading:false};
 
 async function init(){
+  if(!SLUG){document.getElementById('biz').textContent='Reservas';document.getElementById('bizsub').textContent='';app.innerHTML='<div class="card"><p>Falta indicar el negocio. Usa el enlace de reservas que te ha dado tu peluquería.</p></div>';return}
   const b=await rpc('public_business',{p_slug:SLUG});
   if(!b||!b.ok){app.innerHTML='<div class="card"><p>'+esc(ERR[b&&b.error]||ERR.unavailable)+'</p></div>';return}
   S.biz=b;document.title='Reserva · '+b.name;document.getElementById('biz').textContent=b.name;
