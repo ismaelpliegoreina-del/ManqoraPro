@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Reserva tu cita</title>
+<style>
+:root{--bg:#f5f7fb;--card:#fff;--ink:#17202a;--muted:#6b7280;--line:#e5e7eb;--brand:#111827;--accent:#2d6a3e;--accent-soft:#e8f3ec;--danger:#b91c1c;--warn-bg:#fef3c7;--radius:14px}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:640px;margin:0 auto;padding:16px 16px 56px}
+header.top{background:var(--brand);color:#fff;padding:22px 16px}
+header.top .in{max-width:640px;margin:0 auto}
+header.top h1{margin:0 0 4px;font-size:22px}
+header.top p{margin:0;color:#cbd5e1;font-size:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin-top:14px}
+.card h2{margin:0 0 10px;font-size:17px;display:flex;gap:8px;align-items:center}
+.num{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--accent);color:#fff;font-size:13px}
+.locked{opacity:.5;pointer-events:none}
+.opt{display:flex;justify-content:space-between;gap:10px;align-items:center;width:100%;text-align:left;background:#fff;border:1.5px solid var(--line);border-radius:12px;padding:12px;margin-bottom:8px;cursor:pointer;font:inherit;color:inherit}
+.opt:hover{border-color:var(--accent)}
+.opt.sel{border-color:var(--accent);background:var(--accent-soft)}
+.opt small{color:var(--muted);display:block}
+.price{font-weight:700;white-space:nowrap}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1.5px solid var(--line);background:#fff;border-radius:999px;padding:8px 14px;cursor:pointer;font:inherit;color:inherit}
+.chip.sel{background:var(--accent);border-color:var(--accent);color:#fff}
+label.f{display:block;font-size:13px;color:var(--muted);margin:10px 0 4px}
+input[type=text],input[type=tel],input[type=email],input[type=date],select{width:100%;padding:12px;border:1.5px solid var(--line);border-radius:10px;font:inherit;background:#fff}
+input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
+.check{display:flex;gap:10px;align-items:flex-start;margin:10px 0;font-size:14px}
+.check input{margin-top:3px;width:18px;height:18px;flex:none}
+.btn{display:block;width:100%;padding:14px;border:0;border-radius:12px;background:var(--accent);color:#fff;font:inherit;font-weight:700;cursor:pointer;margin-top:14px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn.ghost{background:#fff;color:var(--ink);border:1.5px solid var(--line)}
+.btn.danger{background:var(--danger)}
+.msg{padding:12px;border-radius:10px;margin-top:12px;font-size:14px}
+.msg.err{background:#fee2e2;color:#7f1d1d}
+.msg.ok{background:var(--accent-soft);color:#14532d}
+.msg.warn{background:var(--warn-bg);color:#78350f}
+.muted{color:var(--muted);font-size:14px}
+.sum{display:grid;gap:6px;margin:10px 0}
+.sum div{display:flex;justify-content:space-between;gap:10px;border-bottom:1px dashed var(--line);padding-bottom:6px}
+.code{font:700 22px/1 ui-monospace,Menlo,monospace;letter-spacing:.08em;background:var(--accent-soft);padding:10px 14px;border-radius:10px;display:inline-block}
+footer{max-width:640px;margin:0 auto;padding:0 16px 30px;color:var(--muted);font-size:13px;text-align:center}
+footer a{color:inherit}
+.hp{position:absolute;left:-9999px;opacity:0}
+</style>
+</head>
+<body>
+<header class="top"><div class="in"><h1 id="biz">Reserva tu cita</h1><p id="bizsub">&nbsp;</p></div></header>
+<main class="wrap" id="app"><div class="card"><p class="muted">Cargando…</p></div></main>
+<footer>Reservas gestionadas con Tonsora Pro · <a id="lg" href="index.html#legal=priv" target="_blank" rel="noopener">Privacidad</a></footer>
+
+<script>
+'use strict';
+/* La clave "publishable" es pública por diseño: solo permite llamar a las funciones de reserva. */
+const SB_URL='https://jiokzzzdepinumbrjalm.supabase.co';
+const SB_KEY='sb_publishable_ITxafkZCiuhtCUTvxPSZJA_CerS0vtY';
+const qs=new URLSearchParams(location.search);
+const SLUG=(qs.get('n')||'gloria-bendita').toLowerCase().replace(/[^a-z0-9-]/g,'');
+const CODE=(qs.get('cita')||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
+const TZ='Europe/Madrid';
+const app=document.getElementById('app');
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const eur=n=>new Intl.NumberFormat('es-ES',{style:'currency',currency:'EUR'}).format(n);
+const fmtDay=iso=>new Intl.DateTimeFormat('es-ES',{timeZone:TZ,weekday:'long',day:'numeric',month:'long'}).format(new Date(iso));
+const fmtHour=iso=>new Intl.DateTimeFormat('es-ES',{timeZone:TZ,hour:'2-digit',minute:'2-digit',hour12:false}).format(new Date(iso));
+const todayMadrid=()=>new Intl.DateTimeFormat('en-CA',{timeZone:TZ}).format(new Date());
+const addDays=(d,n)=>{const x=new Date(d+'T12:00:00Z');x.setUTCDate(x.getUTCDate()+n);return x.toISOString().slice(0,10)};
+const ERR={unavailable:'Las reservas online no están disponibles ahora mismo. Llama al negocio por teléfono.',consent_required:'Debes aceptar la política de privacidad.',invalid_name:'Escribe tu nombre (mínimo 2 letras).',invalid_email:'El email no es válido.',invalid_phone:'El teléfono no es válido.',invalid_service:'Servicio no disponible.',invalid_employee:'Profesional no disponible.',slot_unavailable:'Esa hora ya no está disponible. Elige otra.',slot_taken:'Esa hora acaba de ocuparse. Elige otra.',rate_limited:'Demasiados intentos. Espera un rato e inténtalo de nuevo.',not_found:'No encontramos esa cita.',too_late:'Ya no se puede modificar online (queda poco tiempo). Llama al negocio.',not_cancellable:'Esta cita ya no se puede cancelar.',not_changeable:'Esta cita ya no se puede cambiar.',invalid_day:'Elige una fecha válida.',network:'No hay conexión con el servidor. Inténtalo de nuevo.'};
+async function rpc(name,args){
+  try{
+    const r=await fetch(SB_URL+'/rest/v1/rpc/'+name,{method:'POST',headers:{apikey:SB_KEY,'Content-Type':'application/json'},body:JSON.stringify(args)});
+    if(!r.ok)return{ok:false,error:'network'};
+    return await r.json();
+  }catch(e){return{ok:false,error:'network'}}
+}
+const S={biz:null,service:null,emp:null,addons:[],day:'',slots:null,slot:null,name:'',phone:'',email:'',priv:false,mkt:false,busy:false,msg:'',done:null,loading:false};
+
+async function init(){
+  const b=await rpc('public_business',{p_slug:SLUG});
+  if(!b||!b.ok){app.innerHTML='<div class="card"><p>'+esc(ERR[b&&b.error]||ERR.unavailable)+'</p></div>';return}
+  S.biz=b;document.title='Reserva · '+b.name;document.getElementById('biz').textContent=b.name;
+  const ad=b.business&&b.business.address,ph=b.business&&b.business.phone;
+  document.getElementById('bizsub').textContent=[ad,ph].filter(Boolean).join(' · ')||'Reserva online';
+  if(CODE)return miCita();
+  if(!b.bookable){app.innerHTML='<div class="card"><div class="msg warn">Las reservas online están cerradas temporalmente. Puedes llamar al negocio'+(ph?' al <b>'+esc(ph)+'</b>':'')+'.</div></div>';return}
+  render();
+}
+
+function dur(){return S.service?S.service.duration_min+S.addons.reduce((a,id)=>{const u=S.biz.upsells.find(x=>x.id===id);return a+(u?u.extra_min:0)},0):0}
+function total(){return S.service?+S.service.price+S.addons.reduce((a,id)=>{const u=S.biz.upsells.find(x=>x.id===id);return a+(u?+u.price:0)},0):0}
+
+function render(){
+  if(S.done)return renderDone();
+  const b=S.biz,sv=S.service,lock=c=>c?'':' locked';
+  let h='';
+  h+='<div class="card"><h2><span class="num">1</span>Elige el servicio</h2>'+b.services.map(s=>'<button class="opt'+(sv&&sv.id===s.id?' sel':'')+'" data-svc="'+esc(s.id)+'"><span>'+esc(s.name)+'<small>'+esc(s.duration_min)+' min</small></span><span class="price">'+eur(s.price)+'</span></button>').join('')+'</div>';
+  h+='<div class="card'+lock(sv)+'"><h2><span class="num">2</span>Profesional y extras</h2><label class="f" for="emp">Profesional</label><select id="emp"><option value="">Me da igual (primero libre)</option>'+b.employees.map(e=>'<option value="'+esc(e.id)+'"'+(S.emp===e.id?' selected':'')+'>'+esc(e.name)+'</option>').join('')+'</select>';
+  if(b.upsells.length)h+='<label class="f">Extras (opcional)</label>'+b.upsells.map(u=>'<label class="check"><input type="checkbox" data-up="'+esc(u.id)+'"'+(S.addons.includes(u.id)?' checked':'')+'><span>'+esc(u.name)+' · '+eur(u.price)+(u.extra_min?' · +'+esc(u.extra_min)+' min':'')+'</span></label>').join('');
+  h+='</div>';
+  const min=todayMadrid(),max=addDays(min,120);
+  h+='<div class="card'+lock(sv)+'"><h2><span class="num">3</span>Día y hora</h2><label class="f" for="day">Día</label><input type="date" id="day" min="'+min+'" max="'+max+'" value="'+esc(S.day)+'">';
+  if(S.loading)h+='<p class="muted">Buscando horas libres…</p>';
+  else if(S.slots){h+=S.slots.length?'<label class="f">Horas disponibles</label><div class="chips">'+S.slots.map(x=>'<button class="chip'+(S.slot&&S.slot.starts_at===x.starts_at?' sel':'')+'" data-slot="'+esc(x.starts_at)+'" data-emp="'+esc(x.employee_id)+'">'+esc(x.time)+'</button>').join('')+'</div>':'<div class="msg warn">No quedan horas libres ese día'+(S.emp?' con ese profesional':'')+'. Prueba otro día.</div>'}
+  h+='</div>';
+  h+='<div class="card'+lock(S.slot)+'"><h2><span class="num">4</span>Tus datos</h2>';
+  if(S.slot){const e=b.employees.find(x=>x.id===S.slot.employee_id);h+='<div class="sum"><div><span>Servicio</span><b>'+esc(sv.name)+'</b></div><div><span>Cuándo</span><b>'+esc(fmtDay(S.slot.starts_at))+', '+esc(fmtHour(S.slot.starts_at))+'</b></div><div><span>Con</span><b>'+esc(e?e.name:'')+'</b></div><div><span>Duración</span><b>'+dur()+' min</b></div><div><span>Precio</span><b>'+eur(total())+'</b></div></div>'}
+  h+='<label class="f" for="name">Nombre y apellidos</label><input type="text" id="name" autocomplete="name" maxlength="80" value="'+esc(S.name)+'">'
+   +'<label class="f" for="phone">Teléfono móvil</label><input type="tel" id="phone" autocomplete="tel" inputmode="tel" maxlength="20" value="'+esc(S.phone)+'">'
+   +'<label class="f" for="email">Email (te enviaremos la confirmación)</label><input type="email" id="email" autocomplete="email" maxlength="120" value="'+esc(S.email)+'">'
+   +'<input class="hp" type="text" id="website" tabindex="-1" autocomplete="off" aria-hidden="true">'
+   +'<label class="check"><input type="checkbox" id="priv"'+(S.priv?' checked':'')+'><span>He leído y acepto la <a href="index.html#legal=priv" target="_blank" rel="noopener">política de privacidad</a>. *</span></label>'
+   +'<label class="check"><input type="checkbox" id="mkt"'+(S.mkt?' checked':'')+'><span>Quiero recibir promociones y novedades (opcional).</span></label>';
+  if(S.msg)h+='<div class="msg err" role="alert">'+esc(S.msg)+'</div>';
+  h+='<button class="btn" id="go"'+(S.busy?' disabled':'')+'>'+(S.busy?'Reservando…':'Confirmar reserva')+'</button>';
+  h+='<p class="muted" style="margin-top:10px">Puedes cancelar o cambiar tu cita online hasta '+esc(b.cancel_min_hours)+' horas antes.</p></div>';
+  keepFocus(()=>{app.innerHTML=h});
+}
+function keepFocus(fn){const a=document.activeElement,id=a&&a.id,pos=a&&a.selectionStart;fn();if(id){const e=document.getElementById(id);if(e&&e.focus){e.focus();try{if(pos!=null)e.setSelectionRange(pos,pos)}catch(_){}}}}
+
+async function loadSlots(){
+  S.slot=null;S.slots=null;if(!S.service||!S.day){render();return}
+  S.loading=true;render();
+  const r=await rpc('public_slots',{p_slug:SLUG,p_service:S.service.id,p_day:S.day,p_employee:S.emp||null,p_upsells:S.addons});
+  S.loading=false;
+  if(!r.ok){S.slots=[];S.msg=ERR[r.error]||ERR.network;render();return}
+  const seen=new Set();S.slots=r.slots.filter(x=>!seen.has(x.time)&&seen.add(x.time));S.msg='';render();
+}
+
+app.addEventListener('click',async e=>{
+  const t=e.target.closest('[data-svc],[data-slot],#go,[data-act]');if(!t)return;
+  if(t.dataset.svc){S.service=S.biz.services.find(x=>x.id===t.dataset.svc);S.addons=[];S.msg='';await loadSlots();return}
+  if(t.dataset.slot){S.slot={starts_at:t.dataset.slot,employee_id:t.dataset.emp};S.msg='';render();return}
+  if(t.id==='go')return book();
+});
+app.addEventListener('change',async e=>{
+  const t=e.target;
+  if(t.id==='emp'){S.emp=t.value||null;await loadSlots()}
+  else if(t.dataset&&t.dataset.up){const id=t.dataset.up,i=S.addons.indexOf(id);if(t.checked&&i<0)S.addons.push(id);if(!t.checked&&i>=0)S.addons.splice(i,1);await loadSlots()}
+  else if(t.id==='day'){S.day=t.value;await loadSlots()}
+  else if(t.id==='priv'){S.priv=t.checked;if(S.msg===ERR.consent_required){S.msg='';render()}}
+  else if(t.id==='mkt'){S.mkt=t.checked}
+});
+app.addEventListener('input',e=>{const t=e.target;if(t.id==='name')S.name=t.value;if(t.id==='phone')S.phone=t.value;if(t.id==='email')S.email=t.value});
+
+async function book(){
+  if(S.busy)return;
+  if((document.getElementById('website')||{}).value)return; /* antispam */
+  S.msg='';
+  if(!S.slot){S.msg='Elige día y hora.';return render()}
+  if(S.name.trim().length<2){S.msg=ERR.invalid_name;return render()}
+  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(S.email.trim())){S.msg=ERR.invalid_email;return render()}
+  if(S.phone.replace(/\D/g,'').length<9){S.msg=ERR.invalid_phone;return render()}
+  if(!S.priv){S.msg=ERR.consent_required;return render()}
+  S.busy=true;render();
+  const r=await rpc('public_book',{p_slug:SLUG,p_service:S.service.id,p_employee:S.slot.employee_id,p_starts:S.slot.starts_at,p_name:S.name.trim(),p_phone:S.phone.trim(),p_email:S.email.trim(),p_consent_privacy:true,p_consent_marketing:S.mkt,p_upsells:S.addons});
+  S.busy=false;
+  if(r.ok){S.done=r;return render()}
+  S.msg=ERR[r.error]||ERR.network;
+  if(r.error==='slot_taken'||r.error==='slot_unavailable'){await loadSlots();S.msg=ERR[r.error];render();return}
+  render();
+}
+
+function renderDone(){
+  const d=S.done,url=location.origin+location.pathname+'?n='+encodeURIComponent(SLUG)+'&cita='+encodeURIComponent(d.code);
+  app.innerHTML='<div class="card"><h2>✅ '+(d.status==='pending'?'Reserva recibida':'¡Reserva confirmada!')+'</h2>'
+   +(d.status==='pending'?'<div class="msg warn">El negocio debe confirmar tu cita. Te avisaremos por email.</div>':'')
+   +'<div class="sum"><div><span>Servicio</span><b>'+esc(S.service.name)+'</b></div><div><span>Cuándo</span><b>'+esc(fmtDay(d.starts_at))+', '+esc(fmtHour(d.starts_at))+'</b></div></div>'
+   +'<p class="muted">Tu código de cita:</p><p><span class="code">'+esc(d.code)+'</span></p>'
+   +'<p class="muted">Guarda este enlace: te permite ver, cambiar o cancelar tu cita.</p>'
+   +'<a class="btn ghost" style="text-align:center;text-decoration:none" href="'+esc(url)+'">Ver mi cita</a></div>';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+/* ---------- Mi cita ---------- */
+const M={a:null,msg:'',ok:'',day:'',slots:null,slot:null,mode:'view',busy:false};
+async function miCita(){
+  const r=await rpc('public_get_appointment',{p_slug:SLUG,p_code:CODE});
+  if(!r.ok){app.innerHTML='<div class="card"><div class="msg err">'+esc(ERR[r.error]||ERR.network)+'</div></div>';return}
+  M.a=r;renderCita();
+}
+function renderCita(){
+  const a=M.a,st={pending:'Pendiente de confirmar',confirmed:'Confirmada',cancelled:'Cancelada',completed:'Realizada',noshow:'No asistió'}[a.status]||a.status;
+  let h='<div class="card"><h2>Tu cita, '+esc(a.first_name)+'</h2><div class="sum"><div><span>Estado</span><b>'+esc(st)+'</b></div><div><span>Servicio</span><b>'+esc(a.service)+'</b></div><div><span>Cuándo</span><b>'+esc(fmtDay(a.starts_at))+', '+esc(fmtHour(a.starts_at))+'</b></div><div><span>Con</span><b>'+esc(a.employee)+'</b></div><div><span>Precio</span><b>'+eur(a.price)+'</b></div></div><p class="muted">Código: <b>'+esc(a.code)+'</b></p>';
+  if(M.ok)h+='<div class="msg ok">'+esc(M.ok)+'</div>';
+  if(M.msg)h+='<div class="msg err" role="alert">'+esc(M.msg)+'</div>';
+  if(a.can_change){
+    if(M.mode==='view')h+='<button class="btn ghost" data-act="chg">Cambiar de hora</button><button class="btn danger" data-act="cnl">Cancelar cita</button>';
+    if(M.mode==='cancel')h+='<div class="msg warn">¿Seguro que quieres cancelar?</div><button class="btn danger" data-act="cnl2"'+(M.busy?' disabled':'')+'>Sí, cancelar</button><button class="btn ghost" data-act="back">No, volver</button>';
+    if(M.mode==='change'){const min=todayMadrid();h+='<label class="f" for="cday">Nuevo día</label><input type="date" id="cday" min="'+min+'" max="'+addDays(min,120)+'" value="'+esc(M.day)+'">'+(M.slots?(M.slots.length?'<div class="chips" style="margin-top:10px">'+M.slots.map(x=>'<button class="chip'+(M.slot===x.starts_at?' sel':'')+'" data-act="pick" data-s="'+esc(x.starts_at)+'">'+esc(x.time)+'</button>').join('')+'</div>':'<div class="msg warn">No hay horas libres ese día.</div>'):'')+'<button class="btn" data-act="chg2"'+(M.slot&&!M.busy?'':' disabled')+'>Confirmar cambio</button><button class="btn ghost" data-act="back">Volver</button>'}
+  }else if(a.status==='pending'||a.status==='confirmed'){h+='<div class="msg warn">Faltan menos de '+esc(a.cancel_min_hours)+' horas: para cambiarla llama al negocio.</div>'}
+  h+='</div>';
+  app.innerHTML=h;
+}
+app.addEventListener('click',async e=>{
+  const t=e.target.closest('[data-act]');if(!t||!M.a)return;const act=t.dataset.act;M.msg='';M.ok='';
+  if(act==='chg'){M.mode='change';M.day='';M.slots=null;M.slot=null}
+  else if(act==='cnl')M.mode='cancel';
+  else if(act==='back')M.mode='view';
+  else if(act==='pick')M.slot=t.dataset.s;
+  else if(act==='cnl2'){M.busy=true;renderCita();const r=await rpc('public_cancel',{p_slug:SLUG,p_code:CODE});M.busy=false;if(r.ok){M.a.status='cancelled';M.a.can_change=false;M.ok='Tu cita ha sido cancelada.'}else M.msg=ERR[r.error]||ERR.network;M.mode='view'}
+  else if(act==='chg2'){M.busy=true;renderCita();const r=await rpc('public_reschedule',{p_slug:SLUG,p_code:CODE,p_new_start:M.slot});M.busy=false;if(r.ok){M.a.starts_at=r.starts_at;M.a.ends_at=r.ends_at;M.ok='Cita cambiada correctamente.';M.mode='view'}else{M.msg=ERR[r.error]||ERR.network}}
+  renderCita();
+});
+app.addEventListener('change',async e=>{
+  if(e.target.id!=='cday'||!M.a)return;M.day=e.target.value;M.slot=null;M.slots=null;M.msg='';
+  const sv=S.biz.services.find(s=>s.name===M.a.service);
+  if(!sv){M.msg='No se puede calcular las horas. Llama al negocio.';return renderCita()}
+  const r=await rpc('public_slots',{p_slug:SLUG,p_service:sv.id,p_day:M.day,p_employee:(S.biz.employees.find(x=>x.name===M.a.employee)||{}).id||null,p_upsells:[]});
+  if(r.ok){const seen=new Set();M.slots=r.slots.filter(x=>!seen.has(x.time)&&seen.add(x.time))}else M.msg=ERR[r.error]||ERR.network;
+  renderCita();
+});
+init();
+</script>
+</body>
+</html>
