@@ -1,8 +1,8 @@
-/* Tonsora Pro · config.js de una peluquería NUEVA (renómbralo a config.js).
-   Es lo único que cambia entre negocios. */
+/* Tonsora Pro · config.js de Gloria Bendita (modo nube). Solo contiene claves PÚBLICAS: la seguridad la da la base de datos. */
 window.TONSORA_CONFIG = {
-  tenant: 'nombre-del-negocio',   // identificador único (también separa los datos guardados)
-  license: 'active',              // 'active' | 'readonly' | 'suspended'
+  tenant: 'gloria-bendita',
+  license: 'active',
   licenseMsg: '',
-  business: { name: '', cif: '', address: '', phone: '', email: '' }
+  business: { name: 'Gloria Bendita', cif: '', address: '', phone: '', email: '' },
+  supabase: { url: 'https://jiokzzzdepinumbrjalm.supabase.co', key: 'sb_publishable_ITxafkZCiuhtCUTvxPSZJA_CerS0vtY', slug: 'gloria-bendita' }
 };

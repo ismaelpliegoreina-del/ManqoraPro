@@ -1445,7 +1445,7 @@ function printTicketTest(){const sv=db.services.find(x=>x.active)||db.services[0
 
 
 /* ===================== v35 ===================== */
-const VERSION='v37';
+const VERSION='v38';
 /* ---- SHA-256 síncrono (solo ASCII) ---- */
 function sha256(ascii){
   const rr=(v,a)=>(v>>>a)|(v<<(32-a)),mp=Math.pow,mw=mp(2,32);let i,j,result='';const words=[],bl=ascii.length*8;
@@ -2109,6 +2109,237 @@ function renderAI(){const el=document.getElementById('ai');
   if(!AIX.started){AIX.started=true;const b=aiBrief();AIX.hist.push({r:'ai',h:b.h,chips:b.chips})}
   aiRender()}
 function aiAnswer(q){try{return aiRoute(q).h.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim()}catch(e){return'No he podido calcular eso.'}}
+
+/* ===================== v38: Nube (Supabase) ===================== */
+/* Solo se activa si config.js trae  supabase:{url,key,slug}.  Sin eso, el panel sigue en modo demo local. */
+const CL={on:!!(CFG.supabase&&CFG.supabase.url&&CFG.supabase.key),sb:null,tid:null,role:null,uid:null,ses:null,
+  idm:{},rev:{},snap:{},cur:{},revert:new Set(),outq:[],busy:false,again:false,timer:null,poll:null,offline:false,rendPend:false,lastSetMine:'',tsAt:null,docAt:{},lastDocs:{}};
+if(CL.on){
+const SB=CFG.supabase,MZ='Europe/Madrid';
+const _mf=new Intl.DateTimeFormat('en-GB',{timeZone:MZ,hourCycle:'h23',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+const mOff=ms=>{const p={};_mf.formatToParts(new Date(ms)).forEach(x=>p[x.type]=x.value);return Date.UTC(+p.year,+p.month-1,+p.day,+p.hour,+p.minute)-Math.floor(ms/60000)*60000};
+const mIso=(date,time)=>{const[y,m,d]=String(date).split('-').map(Number),[h,mi]=String(time||'00:00').split(':').map(Number);const w=Date.UTC(y,m-1,d,h||0,mi||0);const t1=w-mOff(w);return new Date(w-mOff(t1)).toISOString()};
+const mWall=iso=>{const p={};_mf.formatToParts(new Date(iso)).forEach(x=>p[x.type]=x.value);return{date:p.year+'-'+p.month+'-'+p.day,time:p.hour+':'+p.minute}};
+const num=(v,d=0)=>{v=+v;return isFinite(v)?v:d};
+const U=(t,id)=>{const u=(CL.idm[t]||{})[id];if(!u)throw new Error('ref:'+t+':'+id);return u};
+const A=(t,u)=>u?(CL.rev[t]||{})[u]:undefined;
+const strip=(o,ks)=>{const c=Object.assign({},o);ks.forEach(k=>delete c[k]);return c};
+const canon=v=>Array.isArray(v)?'['+v.map(canon).join(',')+']':(v&&typeof v==='object')?'{'+Object.keys(v).sort().map(k=>JSON.stringify(k)+':'+canon(v[k])).join(',')+'}':JSON.stringify(v);
+const hhmm=s=>s?String(s).slice(0,5):undefined;
+const P3=p=>['cash','card','bizum'].includes(p)?p:'cash';
+const ST=['pending','confirmed','completed','cancelled','noshow'];
+const ov=(r,o)=>{Object.keys(o).forEach(k=>{if(o[k]===undefined)delete o[k]});return Object.assign({},r.data||{},o,{id:r.app_id})};
+
+/* Una entrada por tabla: k = lista en db, t = tabla, to = objeto app → fila, from = fila → objeto app */
+const T=[
+{k:'team',t:'employees',pin:['pinHash','pinSalt','fails','pinLocked'],
+ to:e=>({name:String(e.name||'Sin nombre'),color:e.color||null,commission_pct:Math.min(100,Math.max(0,num(e.commission))),schedule:e.schedule||{},active:e.active!==false,data:strip(e,['pinHash','pinSalt','fails','pinLocked'])}),
+ from:r=>ov(r,{name:r.name,color:r.color||undefined,commission:num(r.commission_pct),schedule:r.schedule,active:r.active,role:(r.data||{}).role||'staff'})},
+{k:'services',t:'services',
+ to:s=>({name:String(s.name||'Servicio'),duration_min:Math.min(480,Math.max(5,Math.round(num(s.duration,30)))),price:Math.max(0,num(s.price)),active:s.active!==false,data:s}),
+ from:r=>ov(r,{name:r.name,price:num(r.price),duration:r.duration_min,active:r.active})},
+{k:'upsells',t:'upsells',
+ to:u=>({name:String(u.name||'Extra'),price:Math.max(0,num(u.price)),extra_min:Math.min(240,Math.max(0,Math.round(num(u.extraMin||u.minutes||u.extra)))),active:u.active!==false,data:u}),
+ from:r=>ov(r,{name:r.name,price:num(r.price),active:r.active})},
+{k:'clients',t:'clients',
+ to:c=>({name:String(c.name||'').trim()||'Sin nombre',phone:c.phone||null,email:c.email||null,notes:c.notes||null,noshows:Math.max(0,Math.round(num(c.noshows))),loyalty:c.loyalty||{},data:c}),
+ from:r=>ov(r,{name:r.name,phone:r.phone||'',email:r.email||'',notes:r.notes||'',noshows:r.noshows,loyalty:(r.loyalty&&Object.keys(r.loyalty).length)?r.loyalty:undefined})},
+{k:'products',t:'products',
+ to:p=>({name:String(p.name||'Producto'),supplier:p.supplier||null,stock:Math.round(num(p.stock)),min_stock:Math.max(0,Math.round(num(p.min))),cost:Math.max(0,num(p.cost)),sale:Math.max(0,num(p.sale)),active:p.active!==false,data:p}),
+ from:r=>ov(r,{name:r.name,supplier:r.supplier||'',stock:r.stock,min:r.min_stock,cost:num(r.cost),sale:num(r.sale)})},
+{k:'appointments',t:'appointments',
+ to:a=>{const st=mIso(a.date,a.time),du=apptDur(a);return{client_id:U('clients',a.clientId),service_id:U('services',a.serviceId),employee_id:U('employees',a.employeeId),
+  starts_at:st,ends_at:new Date(Date.parse(st)+du*60000).toISOString(),status:ST.includes(a.status)?a.status:'confirmed',code:String(a.code||'').toUpperCase().slice(0,12)||undefined,
+  paid:!!a.paid,source:a.source==='online'?'online':'agenda',reminded_at:a.remindedAt?new Date(a.remindedAt).toISOString():null,notes:a.notes||null,data:a}},
+ from:r=>{const w=mWall(r.starts_at),cid=A('clients',r.client_id),sid=A('services',r.service_id),eid=A('employees',r.employee_id);if(cid==null||sid==null||eid==null)return null;
+  const du=Math.round((Date.parse(r.ends_at)-Date.parse(r.starts_at))/60000),sv=(db.services.find(x=>x.id===sid)||{}).duration;
+  return ov(r,{clientId:cid,serviceId:sid,employeeId:eid,date:w.date,time:w.time,status:r.status,code:r.code,paid:r.paid,source:r.source,duration:(du!==sv?du:undefined)||(r.data||{}).duration,remindedAt:r.reminded_at?Date.parse(r.reminded_at):undefined,notes:r.notes||undefined})}},
+{k:'sales',t:'sales',noDel:true,
+ to:s=>({appointment_id:s.appointmentId?(((CL.idm.appointments||{})[s.appointmentId])||null):null,client_id:s.clientId?(((CL.idm.clients||{})[s.clientId])||null):null,employee_id:s.employeeId?(((CL.idm.employees||{})[s.employeeId])||null):null,
+  sold_at:mIso(s.date,s.time||'12:00'),subtotal:num(s.subtotal),vat:num(s.vat),total:num(s.total),tip:Math.max(0,num(s.tip)),payment:P3(s.payment),receipt_no:s.receiptNo||null,
+  annul_of:s.annulOf?U('sales',s.annulOf):null,annul_reason:s.annulReason||null,comm_pct:num(s.commPct),data:s}),
+ from:r=>{const w=mWall(r.sold_at);return ov(r,{date:(r.data||{}).date||w.date,clientId:A('clients',r.client_id),employeeId:A('employees',r.employee_id),appointmentId:A('appointments',r.appointment_id),
+  subtotal:num(r.subtotal),vat:num(r.vat),total:num(r.total),tip:num(r.tip)||undefined,payment:r.payment,receiptNo:r.receipt_no||undefined,annulOf:A('sales',r.annul_of),annulReason:r.annul_reason||undefined,commPct:num(r.comm_pct)})}},
+{k:'expenses',t:'expenses',
+ to:e=>({spent_on:e.date||today(),concept:String(e.concept||'Gasto'),category:e.category||null,supplier:e.supplier||null,base:num(e.base),vat:num(e.vat),total:num(e.total),data:e}),
+ from:r=>ov(r,{date:r.spent_on,concept:r.concept,category:r.category||'',base:num(r.base),vat:num(r.vat),total:num(r.total)})},
+{k:'closures',t:'cash_closures',
+ to:c=>({day:c.date||today(),expected:num(c.systemCash),counted:num(c.countedCash),deviation:num(c.deviation),status:String(c.status||'CUADRADO'),notes:c.notes||null,data:c}),
+ from:r=>ov(r,{date:r.day,systemCash:num(r.expected),countedCash:num(r.counted),deviation:num(r.deviation),status:r.status})},
+{k:'waitlist',t:'waitlist',
+ to:w=>({client_name:String(w.name||'Sin nombre'),phone:w.phone||null,email:w.email||null,service_id:w.serviceId?(((CL.idm.services||{})[w.serviceId])||null):null,wanted_day:w.date||null,data:w}),
+ from:r=>ov(r,{name:r.client_name,phone:r.phone||'',serviceId:A('services',r.service_id),date:r.wanted_day||undefined})},
+{k:'blocks',t:'time_blocks',
+ to:b=>({employee_id:b.employeeId?(((CL.idm.employees||{})[b.employeeId])||null):null,from_day:b.from,to_day:b.to||b.from,kind:b.type==='hours'?'partial':'off',start_time:b.type==='hours'?b.h1||null:null,end_time:b.type==='hours'?b.h2||null:null,reason:b.reason||null,data:b}),
+ from:r=>ov(r,{employeeId:A('employees',r.employee_id),from:r.from_day,to:r.to_day,type:r.kind==='partial'?'hours':'off',h1:hhmm(r.start_time),h2:hhmm(r.end_time),reason:r.reason||''})}
+];
+T.forEach(s=>{CL.idm[s.t]={};CL.rev[s.t]={};CL.snap[s.t]=new Map()});
+const DOCS=['passes','clientsArchive','productsArchive','inventory','notices'];
+
+const pill=(txt,cls)=>{const e=document.getElementById('cloudPill');if(e){e.textContent=txt;e.style.color=cls==='err'?'#f87171':cls==='busy'?'#fbbf24':'#34d399'}};
+const errMsg=e=>{const c=e&&e.code;
+  if(c==='23P01')return'Ese hueco ya está ocupado: la cita se solapa con otra del mismo profesional. Se ha deshecho.';
+  if(c==='23505')return'Ya existe un registro igual (nombre, teléfono o recibo repetido). Se ha deshecho.';
+  if(c==='42501'||c==='PGRST301')return'No tienes permiso para esa acción (o la licencia no está activa). Se ha deshecho.';
+  if(c==='23503')return'Ese dato depende de otro que no existe o se está usando en otro sitio. Se ha deshecho.';
+  return'No se pudo guardar en la nube ('+((e&&e.message)||'error')+'). Se ha deshecho.'};
+const isNet=e=>e&&!e.code&&/fetch|network|load failed|timeout/i.test(e.message||'');
+
+/* ---------- carga de la librería ---------- */
+const loadLib=()=>new Promise((ok,ko)=>{if(window.supabase)return ok();const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js';s.onload=ok;s.onerror=()=>ko(new Error('No se pudo cargar la librería de conexión'));document.head.appendChild(s)});
+async function fetchAll(mk){let all=[],from=0;for(;;){const{data,error}=await mk().range(from,from+999);if(error)throw error;all=all.concat(data||[]);if(!data||data.length<1000)break;from+=1000}return all}
+
+/* ---------- fusionar filas de la nube en db ---------- */
+function mergeRows(s,rows){let ch=false;const list=db[s.k],snap=CL.snap[s.t];
+  rows.forEach(r=>{CL.idm[s.t][r.app_id]=r.id;CL.rev[s.t][r.id]=r.app_id});
+  rows.forEach(r=>{let it;try{it=s.from(r)}catch(e){it=null}if(!it)return;const id=r.app_id,idx=list.findIndex(x=>x.id===id),key=s.t+':'+id;
+    if(idx>=0){let dirty=false;try{dirty=snap.has(id)&&JSON.stringify(s.to(list[idx]))!==snap.get(id)}catch(e){}if(dirty&&!CL.revert.has(key))return;
+      if(canon(list[idx])===canon(it)){try{snap.set(id,JSON.stringify(s.to(it)))}catch(e){}return}list[idx]=it}else list.push(it);
+    try{snap.set(id,JSON.stringify(s.to(it)))}catch(e){}CL.revert.delete(key);ch=true});
+  return ch}
+function rebuildReceipts(){db.receipts=db.sales.filter(s=>s.receiptNo).map(s=>({id:s.receiptNo,saleId:s.id,date:s.date,total:s.total}))}
+
+async function pullAll(full){let ch=false;const tid=CL.tid;
+  for(const s of T){
+    const since=full?null:CL.cur[s.t];
+    const rows=await fetchAll(()=>{let q=CL.sb.from(s.t).select('*').eq('tenant_id',tid).order('app_id');if(since)q=q.gte('updated_at',new Date(Date.parse(since)-15000).toISOString());return q});
+    rows.forEach(r=>{if(!CL.cur[s.t]||r.updated_at>CL.cur[s.t])CL.cur[s.t]=r.updated_at});
+    if(mergeRows(s,rows))ch=true;
+    if(full){const have=new Set(rows.map(r=>r.app_id)),list=db[s.k],snap=CL.snap[s.t];
+      for(let i=list.length-1;i>=0;i--){const id=list[i].id;if(!have.has(id)&&(snap.has(id)||CL.revert.has(s.t+':'+id))){list.splice(i,1);snap.delete(id);delete CL.idm[s.t][id];CL.revert.delete(s.t+':'+id);ch=true}}}}
+  /* ajustes y documentos */
+  const{data:ts}=await CL.sb.from('tenant_settings').select('business,settings,updated_at').eq('tenant_id',tid).maybeSingle();
+  if(ts&&ts.updated_at!==CL.tsAt){if(JSON.stringify([db.business,db.settings])===CL.lastSetMine){applyTS(ts);CL.lastSetMine=JSON.stringify([db.business,db.settings]);ch=true}CL.tsAt=ts.updated_at}
+  const{data:docs}=await CL.sb.from('tenant_docs').select('key,data,updated_at').eq('tenant_id',tid);
+  (docs||[]).forEach(d=>{if(CL.docAt[d.key]===d.updated_at)return;if(JSON.stringify(db[d.key]||[])===(CL.lastDocs[d.key]||JSON.stringify(db[d.key]||[]))){db[d.key]=d.data;CL.lastDocs[d.key]=JSON.stringify(d.data);ch=true}CL.docAt[d.key]=d.updated_at});
+  rebuildReceipts();
+  return ch}
+function applyTS(ts){const s=structuredClone(ts.settings||{}),b=ts.business||{};
+  db.business=Object.assign({name:CL.tname||'Mi negocio',cif:'',address:'',phone:'',email:'',vat:21},b);
+  const tmp=migrate({settings:s,business:db.business,services:[],team:[],clients:[],appointments:[],sales:[],products:[],upsells:[]});
+  db.settings=tmp.settings;if(CL.hours!=null)db.settings.selfService.hours=CL.hours;
+  forceAccess()}
+function forceAccess(){const a=db.settings.access=db.settings.access||{};a.on=true;a.perms=a.perms||{};a.idleMin=0}
+
+/* ---------- enviar cambios ---------- */
+function ensureIds(){T.forEach(s=>db[s.k].forEach(it=>{if(it.id==null)it.id=uid()}))}
+async function pushOne(s,it,row,j){const snap=CL.snap[s.t],id=it.id,tid=CL.tid,key=s.t+':'+id;let res;
+  if(!snap.has(id)){res=await CL.sb.from(s.t).upsert(Object.assign({},row,{tenant_id:tid,app_id:id}),{onConflict:'tenant_id,app_id'}).select(s.t==='sales'?'id,app_id,receipt_no':'id,app_id').single();
+    if(!res.error){CL.idm[s.t][id]=res.data.id;CL.rev[s.t][res.data.id]=id;
+      if(s.t==='sales'&&res.data.receipt_no&&it.receiptNo!==res.data.receipt_no){it.receiptNo=res.data.receipt_no;rebuildReceipts();row=s.to(it);j=JSON.stringify(row)}}}
+  else{const body=s.t==='sales'?{data:row.data}:row;res=await CL.sb.from(s.t).update(body).eq('tenant_id',tid).eq('app_id',id).select('id');
+    if(!res.error&&(!res.data||!res.data.length))res.error={code:'42501',message:'sin permiso'}}
+  if(res.error){if(isNet(res.error)){CL.offline=true;throw res.error}toast(errMsg(res.error));CL.revert.add(key);return false}
+  snap.set(id,j);return true}
+async function pushDel(s,id){const res=await CL.sb.from(s.t).delete().eq('tenant_id',CL.tid).eq('app_id',id).select('id');
+  if(res.error){if(isNet(res.error)){CL.offline=true;throw res.error}toast(errMsg(res.error));CL.revert.add(s.t+':'+id);return false}
+  if(!res.data||!res.data.length){toast(errMsg({code:'42501'}));CL.revert.add(s.t+':'+id);return false}
+  CL.snap[s.t].delete(id);delete CL.idm[s.t][id];return true}
+async function pushAll(){
+  if(CL.busy){CL.again=true;return}CL.busy=true;let bad=false;pill('☁ Guardando…','busy');
+  try{ensureIds();
+    for(const s of T){const list=db[s.k],snap=CL.snap[s.t],seen=new Set();
+      for(const it of list.slice()){seen.add(it.id);let row,j;try{row=s.to(it);j=JSON.stringify(row)}catch(e){continue}
+        if(snap.get(it.id)===j)continue;if(!await pushOne(s,it,row,j))bad=true}
+      if(!s.noDel)for(const id of [...snap.keys()]){if(!seen.has(id)&&!await pushDel(s,id))bad=true}}
+    /* ajustes (solo propietario/encargado) */
+    if(CL.role!=='staff'){const cur=JSON.stringify([db.business,db.settings]);
+      if(cur!==CL.lastSetMine){const b=db.business,st=structuredClone(db.settings);
+        const{data:upd,error}=await CL.sb.from('tenant_settings').update({business:b,settings:st}).eq('tenant_id',CL.tid).select('updated_at');
+        if(error){if(isNet(error)){CL.offline=true;throw error}toast(errMsg(error));bad=true}
+        else{CL.lastSetMine=cur;if(upd&&upd[0])CL.tsAt=upd[0].updated_at;
+          const h=db.settings.selfService&&+db.settings.selfService.hours;if(isFinite(h)&&h!==CL.hours){const r=await CL.sb.rpc('set_cancel_hours',{p_tenant:CL.tid,p_hours:Math.round(h)});if(!r.error)CL.hours=Math.round(h)}}}}
+    for(const k of DOCS){const j=JSON.stringify(db[k]||[]);if(CL.lastDocs[k]!==j){const{data:du,error}=await CL.sb.from('tenant_docs').upsert({tenant_id:CL.tid,key:k,data:db[k]||[]},{onConflict:'tenant_id,key'}).select('updated_at');if(!error){CL.lastDocs[k]=j;if(du&&du[0])CL.docAt[k]=du[0].updated_at}}}
+    /* correos en cola (después de guardar clientes y citas) */
+    while(CL.outq.length){const m=CL.outq[0];const{error}=await CL.sb.from('outbox_emails').insert(m);if(error&&isNet(error)){CL.offline=true;throw error}CL.outq.shift()}
+    CL.offline=false;
+    if(bad){await pullAll(true);rebuildReceipts();softRender(true)}
+    pill(bad?'⚠ Revisa los avisos':'☁ Guardado','ok')
+  }catch(e){CL.offline=true;pill('⚠ Sin conexión: se guardará al volver','err');clearTimeout(CL.timer);CL.timer=setTimeout(pushAll,8000)}
+  finally{CL.busy=false;if(CL.again){CL.again=false;sched()}}}
+function sched(){if(!CL.tid)return;clearTimeout(CL.timer);CL.timer=setTimeout(pushAll,700)}
+
+function softRender(force){const busy=document.activeElement&&/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName),m=document.getElementById('modal');
+  if(!force&&(busy||(m&&m.classList.contains('show')))){CL.rendPend=true;return}CL.rendPend=false;try{renderAll()}catch(e){}}
+async function pollTick(){if(!CL.tid||CL.busy||document.hidden)return;try{CL.tick=(CL.tick||0)+1;const ch=await pullAll(CL.tick%4===0);CL.offline=false;if(ch||CL.rendPend)softRender(false);pill('☁ Sincronizado','ok')}catch(e){pill('⚠ Sin conexión','err')}}
+
+/* ---------- guardar local = programar envío ---------- */
+const normCodes=()=>db.appointments.forEach(a=>{if(a.code){const n=String(a.code).toUpperCase().slice(0,12);if(n!==a.code)a.code=n}});
+save=function(){ensureCodes(db);normCodes();stampCommissionsOn(db);sched()};
+saveRaw=function(){sched()};
+autoReminders=function(){};            /* los recordatorios los manda el servidor cada día */
+accLock=function(){};                   /* no hay pantalla de PIN: el control de acceso es el login + rol de la base de datos */
+isLogged=function(){return !!CL.ses};
+
+/* ---------- emails: se encolan en la base de datos ---------- */
+{const _e=enviarEmailCita;enviarEmailCita=function(id,type){const a=db.appointments.find(x=>x.id===id),c=a&&client(a.clientId);if(!a||!c||!c.email)return false;
+  ensureCodes(db);normCodes();const ok=_e(id,type);if(!ok)return false;
+  const tpl=(type==='confirm'&&a.status==='pending')?'pending':type;
+  CL.outq.push({tenant_id:CL.tid,to_email:String(c.email).trim().toLowerCase(),template:tpl,payload:{code:a.code,starts_at:mIso(a.date,a.time),service:(service(a.serviceId)||{}).name||'',employee:(employee(a.employeeId)||{}).name||'',business:(db.business||{}).name||'',name:c.name||''}});
+  sched();return true}}
+
+/* ---------- entrada pública: ahora es reservas.html ---------- */
+const PUBURL=()=>'reservas.html?n='+encodeURIComponent(SB.slug||'');
+showPublic=function(){window.open(PUBURL(),'_blank')};
+{const _r=route;route=function(){const m=/^#cita=([A-Za-z0-9]{8,64})$/.exec(location.hash);if(m){location.replace(PUBURL()+'&cita='+m[1]);return}_r()}}
+
+/* ---------- login con Supabase Auth ---------- */
+const lmsg=t=>{let e=document.getElementById('loginMsg');if(!e){e=document.createElement('div');e.id='loginMsg';e.className='notice';e.style.cssText='margin-top:10px;color:#b91c1c';document.querySelector('#login .form').appendChild(e)}e.textContent=t||'';e.style.display=t?'':'none'};
+doLogin=async function(){const em=document.getElementById('loginEmail').value.trim(),pw=document.getElementById('loginPass').value;if(!em||!pw){lmsg('Escribe tu email y contraseña');return}
+  lmsg('');try{await loadLib();ensureClient();const{data,error}=await CL.sb.auth.signInWithPassword({email:em,password:pw});
+    if(error){lmsg(/invalid/i.test(error.message)?'Email o contraseña incorrectos':'No se pudo entrar: '+error.message);return}
+    await start(data.session)}catch(e){lmsg('No se pudo conectar. Revisa tu internet e inténtalo de nuevo.')}};
+logout=async function(){try{await CL.sb.auth.signOut()}catch(e){}CL.ses=null;location.hash='';location.reload()};
+function ensureClient(){if(!CL.sb)CL.sb=window.supabase.createClient(SB.url,SB.key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}})}
+
+async function start(ses){
+  lmsg('');const b=document.querySelector('#login .login-card button.primary');if(b){b.disabled=true;b.textContent='Cargando datos…'}
+  try{
+    CL.ses=ses;CL.uid=ses.user.id;
+    const{data:ms,error:e1}=await CL.sb.from('members').select('role,employee_id,active,tenant_id,tenants(id,slug,name,license_status,cancel_min_hours)').eq('user_id',CL.uid).eq('active',true);
+    if(e1)throw e1;
+    const m=(ms||[]).find(x=>x.tenants&&x.tenants.slug===SB.slug)||null;
+    if(!m){await CL.sb.auth.signOut();CL.ses=null;lmsg('Tu usuario no tiene acceso a este negocio. Contacta con quien te dio de alta.');return}
+    CL.tid=m.tenant_id;CL.role=m.role;CL.tname=m.tenants.name;CL.hours=m.tenants.cancel_min_hours;
+    const d={business:{name:CL.tname},settings:{},team:[],services:[],upsells:[],clients:[],appointments:[],sales:[],products:[],expenses:[],closures:[],waitlist:[],blocks:[],receipts:[],passes:[],clientsArchive:[],productsArchive:[],inventory:[],notices:[],outbox:[]};
+    db=d;T.forEach(s=>{CL.idm[s.t]={};CL.rev[s.t]={};CL.snap[s.t]=new Map();CL.cur[s.t]=null});
+    const{data:ts}=await CL.sb.from('tenant_settings').select('business,settings,updated_at').eq('tenant_id',CL.tid).maybeSingle();
+    CL.tsAt=ts?ts.updated_at:null;
+    db=migrate(Object.assign(d,{business:Object.assign({name:CL.tname,cif:'',address:'',phone:'',email:'',vat:21},(ts&&ts.business)||{}),settings:(ts&&structuredClone(ts.settings))||{}}));
+    db.settings.selfService.hours=CL.hours;forceAccess();
+    await pullAll(true);
+    CL.lastSetMine=JSON.stringify([db.business,db.settings]);
+    const emp=m.employee_id?A('employees',m.employee_id):undefined,me=emp!=null?db.team.find(x=>x.id===emp):null;
+    if(me)me.role=m.role;
+    accCur={id:me?me.id:0,name:me?me.name:(ses.user.email||'Usuario'),role:m.role};
+    if(m.tenants.license_status!=='active')toast('La licencia de este negocio no está activa: solo podrás consultar datos.');
+    document.getElementById('login').classList.add('hide');document.getElementById('admin').classList.remove('hide');
+    currentView=canView(currentView)?currentView:firstView();
+    prepUi();renderAll();showViewDom(currentView);accPillUpdate();bizTop();
+    clearInterval(CL.poll);CL.poll=setInterval(pollTick,20000);
+    toast('Sesión iniciada')
+  }catch(e){console.error(e);lmsg('No se pudieron cargar los datos: '+((e&&e.message)||'error'))}
+  finally{if(b){b.disabled=false;b.textContent='Entrar al panel'}}}
+function prepUi(){
+  const ta=document.querySelector('.top-actions');
+  if(ta&&!document.getElementById('cloudPill'))ta.insertAdjacentHTML('afterbegin','<span class="pill" id="cloudPill" title="Estado de la sincronización">☁ Sincronizado</span>');
+  document.querySelectorAll('.top-actions button').forEach(b=>{if(/showPublic/.test(b.getAttribute('onclick')||''))b.textContent='Ver reservas online ↗'});
+  ['accLockBtn'].forEach(i=>{const e=document.getElementById(i);if(e)e.remove()});document.querySelectorAll('.top-actions button').forEach(b=>{if(/reset|Reiniciar/i.test((b.getAttribute('onclick')||'')+b.textContent))b.remove()});
+  const ap=document.getElementById('accPill');if(ap){ap.onclick=null;ap.title=''}
+  const vp=document.getElementById('verPill');if(vp)vp.textContent='● '+VERSION+' · nube'}
+
+/* ---------- arranque ---------- */
+(async function boot(){
+  const lc=document.querySelector('#login .login-card');
+  if(lc){const p=lc.querySelector('h1+p');if(p)p.textContent='Accede con tu email y contraseña.';const n=lc.querySelector('.notice');if(n)n.textContent='Tus datos se guardan de forma segura en la nube y se sincronizan entre todos tus dispositivos.'}
+  try{await loadLib();ensureClient();
+    CL.sb.auth.onAuthStateChange((ev)=>{if(ev==='SIGNED_OUT'&&CL.ses){CL.ses=null;location.reload()}});
+    const{data}=await CL.sb.auth.getSession();if(data&&data.session)await start(data.session)}
+  catch(e){lmsg('No se pudo conectar con el servidor. Revisa tu internet.')}
+  window.addEventListener('focus',pollTick);document.addEventListener('visibilitychange',()=>{if(!document.hidden)pollTick()});
+  window.addEventListener('online',()=>{if(CL.tid)sched()});
+})();
+}
 
 autoReminders();
 init();
