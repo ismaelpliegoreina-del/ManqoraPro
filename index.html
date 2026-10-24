@@ -166,15 +166,27 @@ footer a{color:var(--mut);margin-right:16px}
 }
 @media(max-width:360px){.brand span{font-size:15px}.btn.sm{padding:9px 11px;font-size:13px}}
 
-/* aviso si no se abre el correo */
-#mailbox{position:fixed;left:50%;bottom:18px;transform:translate(-50%,30px);opacity:0;pointer-events:none;z-index:50;width:min(440px,calc(100% - 28px));background:#0d2318;color:#fff;border-radius:16px;padding:16px 18px;box-shadow:0 20px 50px rgba(0,0,0,.3);transition:.25s}
-#mailbox.on{opacity:1;transform:translate(-50%,0);pointer-events:auto}
-#mailbox p{margin:0 0 10px;font-size:15px;line-height:1.4}
-#mailbox b{color:#7fe0b0}
-#mailbox .row{display:flex;flex-wrap:wrap;gap:8px}
-#mailbox button,#mailbox a{font:700 14px/1 inherit;font-family:inherit;border:0;border-radius:10px;padding:11px 14px;cursor:pointer;text-decoration:none;background:var(--g);color:#031a10}
-#mailbox a.alt{background:#fff}
-#mailbox .x{background:transparent;color:#cfe8da;padding:11px 6px}
+
+/* formulario de contacto */
+#cf{position:fixed;inset:0;z-index:60;display:none;align-items:center;justify-content:center;padding:14px;background:rgba(3,26,16,.6);backdrop-filter:blur(3px)}
+#cf.on{display:flex}
+#cf .box{background:#fff;border-radius:20px;width:min(480px,100%);max-height:calc(100vh - 28px);overflow:auto;padding:26px 24px 22px;position:relative;box-shadow:0 30px 80px rgba(0,0,0,.35)}
+#cf h2{font-size:23px;margin:0 28px 6px 0}
+#cf .sub{margin:0 0 16px;color:var(--mut);font-size:15px}
+#cf .close{position:absolute;top:12px;right:12px;width:38px;height:38px;border:0;border-radius:50%;background:var(--gx);font-size:22px;line-height:1;cursor:pointer;color:var(--ink)}
+#cf label{display:block;font-weight:600;font-size:14px;margin:12px 0 5px}
+#cf input[type=text],#cf input[type=email],#cf input[type=tel],#cf textarea{width:100%;font:16px/1.3 inherit;font-family:inherit;padding:12px 13px;border:1.5px solid var(--line);border-radius:12px;background:#fff;color:var(--ink)}
+#cf textarea{min-height:100px;resize:vertical}
+#cf input:focus,#cf textarea:focus{outline:none;border-color:var(--g);box-shadow:0 0 0 3px rgba(0,153,85,.15)}
+#cf .chk{display:flex;gap:10px;align-items:flex-start;margin:14px 0 4px;font-size:13.5px;color:var(--mut);font-weight:400}
+#cf .chk input{margin-top:3px;width:18px;height:18px;flex-shrink:0;accent-color:var(--g)}
+#cf .hp{position:absolute;left:-9999px;width:1px;height:1px;opacity:0}
+#cf .btn{width:100%;margin-top:14px}
+#cf .btn[disabled]{opacity:.6;cursor:wait}
+#cf .err{color:#b42318;font-size:14px;margin:10px 0 0;display:none}
+#cf .ok{text-align:center;padding:10px 0 4px;display:none}
+#cf .ok h2{margin:8px 0 6px}
+#cf .ok .tick{width:56px;height:56px;border-radius:50%;background:var(--gs);color:var(--gd);font-size:30px;display:inline-flex;align-items:center;justify-content:center}
 </style>
 </head>
 <body>
@@ -338,36 +350,65 @@ footer a{color:var(--mut);margin-right:16px}
 </div>
 <div class="wrap credits">Fotos de ambientación de <a href="https://unsplash.com" rel="noopener">Unsplash</a>. No son clientes ni locales que usen Manqora Pro.</div></footer>
 
-<div id="mailbox" role="status" aria-live="polite">
-  <p>Si no se te ha abierto el correo, escríbenos a <b>hola@manqorapro.com</b></p>
-  <div class="row">
-    <button type="button" id="mbcopy">Copiar dirección</button>
-    <a class="alt" id="mbgmail" target="_blank" rel="noopener" href="https://mail.google.com/mail/?view=cm&fs=1&to=hola@manqorapro.com&su=Quiero%20una%20demo%20de%20Manqora%20Pro">Abrir Gmail</a>
-    <button type="button" class="x" id="mbx">Cerrar</button>
+
+<div id="cf" role="dialog" aria-modal="true" aria-labelledby="cft">
+  <div class="box">
+    <button type="button" class="close" id="cfx" aria-label="Cerrar">&times;</button>
+    <form id="cfform" novalidate>
+      <h2 id="cft">Cuéntanos qué necesitas</h2>
+      <p class="sub">Te respondemos personalmente, normalmente en menos de un día laborable.</p>
+      <label for="cfn">Nombre</label><input type="text" id="cfn" name="name" autocomplete="name" maxlength="120" required>
+      <label for="cfe">Email</label><input type="email" id="cfe" name="email" autocomplete="email" maxlength="200" required>
+      <label for="cfp">Teléfono <span style="font-weight:400;color:var(--mut)">(opcional)</span></label><input type="tel" id="cfp" name="phone" autocomplete="tel" maxlength="40">
+      <label for="cfm">Mensaje</label><textarea id="cfm" name="message" maxlength="2000" required></textarea>
+      <input class="hp" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <label class="chk"><input type="checkbox" id="cfc"><span>Acepto que usen estos datos solo para responderme. No los compartirán con nadie.</span></label>
+      <p class="err" id="cferr"></p>
+      <button class="btn" type="submit" id="cfsend">Enviar mensaje</button>
+    </form>
+    <div class="ok" id="cfok"><div class="tick">&#10003;</div><h2>¡Recibido!</h2><p class="sub">Te escribiremos al email que nos has dado. Gracias por contarnos.</p><button type="button" class="btn ghost" id="cfdone">Cerrar</button></div>
   </div>
 </div>
 <script>
 (function(){
-  var box=document.getElementById('mailbox'),T;
-  function show(){box.classList.add('on')}
-  function hide(){box.classList.remove('on')}
+  var EP='https://jiokzzzdepinumbrjalm.supabase.co/functions/v1/contact-form';
+  var KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imppb2t6enpkZXBpbnVtYnJqYWxtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI3NzI0OTYsImV4cCI6MjEwODM0ODQ5Nn0.ztvIlZQkTO1xtZwRM_hSC-E6UwXIuHJegrRvHRaJdww';
+  var $=function(i){return document.getElementById(i)},cf=$('cf'),form=$('cfform'),err=$('cferr'),last=null;
+  function open(subject){
+    last=document.activeElement;
+    form.style.display='';$('cfok').style.display='none';err.style.display='none';
+    if(!$('cfm').value)$('cfm').value=subject||'';
+    cf.classList.add('on');document.body.style.overflow='hidden';setTimeout(function(){$('cfn').focus()},50);
+  }
+  function close(){cf.classList.remove('on');document.body.style.overflow='';if(last&&last.focus)last.focus()}
+  function msg(t){err.textContent=t;err.style.display='block'}
   document.addEventListener('click',function(e){
     var a=e.target.closest&&e.target.closest('a[href^="mailto:"]');
     if(!a)return;
-    var left=false;
-    function gone(){left=true}
-    window.addEventListener('blur',gone,{once:true});
-    document.addEventListener('visibilitychange',gone,{once:true});
-    clearTimeout(T);
-    T=setTimeout(function(){if(!left)show()},900);
+    e.preventDefault();
+    var m=/subject=([^&]+)/.exec(a.getAttribute('href'));
+    open(m?decodeURIComponent(m[1]):'');
   });
-  document.getElementById('mbx').onclick=hide;
-  document.getElementById('mbcopy').onclick=function(){
-    var b=this,t='hola@manqorapro.com';
-    function ok(){b.textContent='¡Copiada!';setTimeout(function(){b.textContent='Copiar dirección'},1800)}
-    if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(ok,function(){window.prompt('Copia la dirección:',t)})}
-    else window.prompt('Copia la dirección:',t);
-  };
+  $('cfx').onclick=close;$('cfdone').onclick=close;
+  cf.addEventListener('click',function(e){if(e.target===cf)close()});
+  document.addEventListener('keydown',function(e){if(e.key==='Escape'&&cf.classList.contains('on'))close()});
+  form.addEventListener('submit',function(e){
+    e.preventDefault();err.style.display='none';
+    var d={name:$('cfn').value.trim(),email:$('cfe').value.trim(),phone:$('cfp').value.trim(),message:$('cfm').value.trim(),website:form.website.value,consent:$('cfc').checked};
+    if(!d.name)return msg('Escribe tu nombre.');
+    if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(d.email))return msg('Revisa tu email: parece que falta algo.');
+    if(d.message.length<3)return msg('Escribe un mensaje breve.');
+    if(!d.consent)return msg('Marca la casilla para que podamos responderte.');
+    var b=$('cfsend');b.disabled=true;b.textContent='Enviando…';
+    fetch(EP,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+KEY,'apikey':KEY},body:JSON.stringify(d)})
+      .then(function(r){return r.json().catch(function(){return{}}).then(function(j){return{s:r.status,j:j}})})
+      .then(function(x){
+        if(x.j&&x.j.ok){form.style.display='none';$('cfok').style.display='block';$('cfm').value='';$('cfc').checked=false;return}
+        msg(x.s===429?'Has enviado varios mensajes seguidos. Prueba de nuevo en un rato o escríbenos a hola@manqorapro.com.':'No hemos podido enviarlo. Escríbenos a hola@manqorapro.com y te respondemos.');
+      })
+      .catch(function(){msg('Sin conexión. Escríbenos a hola@manqorapro.com y te respondemos.')})
+      .then(function(){b.disabled=false;b.textContent='Enviar mensaje'});
+  });
 })();
 </script>
 </body>
