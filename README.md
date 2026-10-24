@@ -2,7 +2,10 @@
 
 Aplicación de reservas y gestión para barberías y peluquerías.
 
-- `index.html` · versión v37 (plantilla limpia, sin datos de ningún cliente)
+- `index.html` · web de venta de Manqora Pro (página pública)
+- `admin.html` · panel de administración (en la web: `/admin`)
+- `reservas.html` · página de reservas de cada negocio (en la web: `/r/<negocio>`)
+- `_redirects` y `_headers` · reglas de Cloudflare Pages
 - `config.js` · configuración del negocio (tenant, licencia, datos del negocio)
 
 Estado: prototipo en un solo HTML con datos locales. Siguiente fase: Supabase (multi-negocio, login, reservas sin doble reserva).
