@@ -5,7 +5,7 @@ const sb = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SE
 const RESEND_KEY = Deno.env.get('RESEND_API_KEY') || '';
 const FROM_EMAIL = Deno.env.get('FROM_EMAIL') || 'onboarding@resend.dev';
 const TEST_TO = Deno.env.get('TEST_TO') || '';
-const SITE_URL = Deno.env.get('SITE_URL') || 'https://ismaelpliegoreina-del.github.io/Project-Tonsora/reservas.html';
+const SITE_URL = Deno.env.get('SITE_URL') || 'https://manqorapro.com/reservas.html';
 const TEST_MODE = FROM_EMAIL.toLowerCase().endsWith('@resend.dev');
 
 type Row = { id: string; tenant_id: string; to_email: string; template: string; payload: Record<string, any>; attempts: number };
