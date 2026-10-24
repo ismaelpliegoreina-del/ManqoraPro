@@ -1,7 +1,7 @@
-/* Tonsora Pro · configuración común (claves PÚBLICAS: la seguridad la da la base de datos).
+/* Manqora Pro · configuración común (claves PÚBLICAS: la seguridad la da la base de datos).
    El negocio se detecta al iniciar sesión; no hace falta indicarlo aquí. */
-window.TONSORA_CONFIG = {
-  tenant: 'tonsora',
+window.MANQORA_CONFIG = {
+  tenant: 'manqora',
   license: 'active',
   licenseMsg: '',
   business: { name: '', cif: '', address: '', phone: '', email: '' },

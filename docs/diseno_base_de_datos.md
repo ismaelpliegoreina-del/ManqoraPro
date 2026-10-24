@@ -1,6 +1,6 @@
-# Tonsora Pro · Diseño de base de datos (borrador para aprobar)
+# Manqora Pro · Diseño de base de datos (borrador para aprobar)
 
-Proyecto Supabase: `tonsora` (eu-west-1). **Nada de esto está aplicado todavía.**
+Proyecto Supabase: `manqora` (antes `tonsora`) (eu-west-1). **Nada de esto está aplicado todavía.**
 
 ## 1. Principios
 
@@ -81,7 +81,7 @@ Protecciones: validación de campos, límite de intentos por IP/teléfono, códi
 
 ## 7. Datos y migración
 
-- Los datos de prueba de Gloria **no** se cargan en Tonsora. Se crea un negocio de demo aparte.
+- Los datos de prueba de Gloria **no** se cargan en Manqora. Se crea un negocio de demo aparte.
 - Para el piloto, una función de importación acepta el JSON exportado desde el HTML actual.
 - Copias de seguridad: automáticas en plan Pro; hasta entonces, exportación manual semanal.
 
@@ -90,7 +90,7 @@ Protecciones: validación de campos, límite de intentos por IP/teléfono, códi
 1. **Un proyecto para todos los negocios con `tenant_id`** (mi recomendación) o un proyecto de Supabase por cliente.
 2. **Quién inicia sesión:** solo propietario y encargado con email, y los empleados con PIN en el dispositivo del local (recomendado para empezar), o una cuenta por empleado.
 3. **Reserva online:** ¿exigimos teléfono y email siempre, o solo teléfono?
-4. **Dirección pública:** `slug.tonsora.app` / ruta `/gloria-bendita` o dominio propio de cada negocio (más adelante).
+4. **Dirección pública:** `slug.manqora.app` / ruta `/gloria-bendita` o dominio propio de cada negocio (más adelante).
 5. **Plazo de cancelación** por defecto: ¿2 h, 12 h, 24 h?
 
 ## 9. Orden de ejecución tras tu aprobación

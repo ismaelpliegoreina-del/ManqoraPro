@@ -1,4 +1,4 @@
--- 001 · Tablas base de Tonsora Pro (multi-negocio)
+-- 001 · Tablas base de Manqora Pro (multi-negocio)
 create extension if not exists btree_gist with schema extensions;
 create extension if not exists pgcrypto with schema extensions;
 

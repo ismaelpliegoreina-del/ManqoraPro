@@ -1,4 +1,4 @@
-# Tonsora Pro · Booking & Management
+# Manqora Pro · Booking & Management
 
 Aplicación de reservas y gestión para barberías y peluquerías.
 

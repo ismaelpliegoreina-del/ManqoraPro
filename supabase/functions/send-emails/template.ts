@@ -64,7 +64,7 @@ export function build(row: Row, slug: string, biz: Biz, siteUrl: string) {
     + `<tr><td style="padding:22px 28px 26px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid #eef0f3"><tr><td style="padding-top:16px;font-size:13px;line-height:1.5;color:#6b7280">`
     + `<b style="color:#374151">${bizName}</b>${biz.address ? `<br>${esc(biz.address)}` : ''}${biz.phone ? `<br>${esc(biz.phone)}` : ''}`
     + `</td></tr></table></td></tr></table>`
-    + `<p style="margin:14px 0 0;font:12px system-ui,Arial,sans-serif;color:#9ca3af">Reservas con Tonsora Pro</p>`
+    + `<p style="margin:14px 0 0;font:12px system-ui,Arial,sans-serif;color:#9ca3af">Reservas con Manqora Pro</p>`
     + `</td></tr></table></body></html>`;
   };
 
