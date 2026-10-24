@@ -214,12 +214,13 @@ td .dots{flex-wrap:nowrap}.dot{flex:none}
 
 /* Manqora: barra superior blanca y botones verdes (mismo estilo que la web de venta) */
 :root{--mq:#00853f;--mq-d:#00703c;--mq-s:#e3f5ea}
-.topbar{background:#fff;color:var(--ink);border-bottom:1px solid var(--line)}
-.topbar .tn-pill{background:transparent;padding-left:2px}
-.topbar .brandmark{background:var(--mq-s);color:var(--mq-d)}
-.topbar .pill{background:#f1f5f3;color:#374151}
-.topbar .btn{background:#fff;color:#1f2937;border-color:#d8dee7}
-.topbar .btn:hover{border-color:var(--mq);color:var(--mq-d)}
+.topbar{background:var(--mq);color:#fff;border-bottom:0}
+.topbar .tn-pill{background:#fff;padding:6px 13px 6px 10px}
+.topbar .brandmark{background:#fff;color:var(--mq-d)}
+.topbar #topBiz{color:#d6f3e2!important;font-weight:600}
+.topbar .pill{background:rgba(255,255,255,.18);color:#fff}
+.topbar .btn{background:#fff;color:var(--mq-d);border-color:#fff}
+.topbar .btn:hover{background:var(--mq-s);border-color:var(--mq-s);color:var(--mq-d)}
 .btn.primary,.btn.green{background:var(--mq);color:#fff;border-color:var(--mq)}
 .btn.primary:hover,.btn.green:hover{background:var(--mq-d);border-color:var(--mq-d)}
 [data-theme=dark] .topbar{background:#111827;color:#fff;border-bottom:0}
