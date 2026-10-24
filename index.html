@@ -4,10 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Manqora Pro · Reservas y gestión para barberías y peluquerías</title>
+<link rel="preload" href="assets/fonts/inter-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
 <meta name="description" content="Reservas online con tu marca, agenda por profesional y control del negocio en un solo panel. Pago único, sin comisiones por cita.">
 <meta property="og:title" content="Manqora Pro · Reservas y gestión para barberías y peluquerías">
 <meta property="og:description" content="Pago único, sin comisiones por cita y con tus clientes siempre tuyos.">
-<link rel="icon" type="image/png" href="assets/venta/logo.png"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+<link rel="icon" type="image/png" href="assets/venta/logo.png">
 <style>
 :root{--g:#009955;--gd:#00703c;--gs:#e3f5ea;--gx:#f3fbf6;--ink:#0d2318;--mut:#55665c;--line:#dfeee6;--w:#fff;--r:18px}
 *{box-sizing:border-box}
@@ -179,6 +181,7 @@ footer a{color:var(--mut);margin-right:16px}
 #cf textarea{min-height:100px;resize:vertical}
 #cf input:focus,#cf textarea:focus{outline:none;border-color:var(--g);box-shadow:0 0 0 3px rgba(0,153,85,.15)}
 #cf .chk{display:flex;gap:10px;align-items:flex-start;margin:14px 0 4px;font-size:13.5px;color:var(--mut);font-weight:400}
+#cf .chk a{color:var(--gd)}
 #cf .chk input{margin-top:3px;width:18px;height:18px;flex-shrink:0;accent-color:var(--g)}
 #cf .hp{position:absolute;left:-9999px;width:1px;height:1px;opacity:0}
 #cf .btn{width:100%;margin-top:14px}
@@ -346,7 +349,7 @@ footer a{color:var(--mut);margin-right:16px}
 
 <footer><div class="wrap in">
   <div><b>MANQORA</b> PRO · booking &amp; management<br>hola@manqorapro.com</div>
-  <div><a href="#">Aviso legal</a><a href="#">Privacidad</a><a href="#">Cookies</a></div>
+  <div><a href="legal.html#aviso">Aviso legal</a><a href="legal.html#privacidad">Privacidad</a><a href="legal.html#cookies">Cookies</a></div>
 </div>
 <div class="wrap credits">Fotos de ambientación de <a href="https://unsplash.com" rel="noopener">Unsplash</a>. No son clientes ni locales que usen Manqora Pro.</div></footer>
 
@@ -362,7 +365,7 @@ footer a{color:var(--mut);margin-right:16px}
       <label for="cfp">Teléfono <span style="font-weight:400;color:var(--mut)">(opcional)</span></label><input type="tel" id="cfp" name="phone" autocomplete="tel" maxlength="40">
       <label for="cfm">Mensaje</label><textarea id="cfm" name="message" maxlength="2000" required></textarea>
       <input class="hp" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
-      <label class="chk"><input type="checkbox" id="cfc"><span>Acepto que usen estos datos solo para responderme. No los compartirán con nadie.</span></label>
+      <label class="chk"><input type="checkbox" id="cfc"><span>Acepto que usen estos datos solo para responderme, según la <a href="legal.html#privacidad" target="_blank" rel="noopener">política de privacidad</a>.</span></label>
       <p class="err" id="cferr"></p>
       <button class="btn" type="submit" id="cfsend">Enviar mensaje</button>
     </form>
