@@ -7,7 +7,7 @@ Proyecto Supabase: `manqora` (antes `tonsora`) (eu-west-1). **Nada de esto está
 1. **Un solo proyecto, muchos negocios (multi-tenant).** Cada fila lleva `tenant_id`. El aislamiento lo garantizan las reglas RLS, no la aplicación.
 2. **El cliente web nunca toca tablas.** La web pública solo llama a funciones (RPC) con permisos mínimos.
 3. **Las fechas se guardan como `timestamptz` (UTC) y se muestran siempre en Europe/Madrid.** El cambio de hora de verano e invierno lo resuelve la base de datos.
-4. **Las reglas importantes viven en el servidor:** no doble reserva, licencia activa, numeración de recibos sin saltos.
+4. **Las reglas importantes viven en el servidor:** no doble reserva, licencia activa, no se emiten tickets ni facturas (migración 013: ya no se numeran los cobros).
 5. **Nunca claves secretas en el HTML.** Solo la clave pública (`anon/publishable`).
 
 ## 2. Tablas
