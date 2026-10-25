@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Guía de arranque · Manqora Pro</title>
+<meta name="description" content="Pon en marcha tu peluquería en Manqora Pro en 8 pasos.">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#009955">
+<link rel="icon" type="image/png" href="assets/venta/logo.png">
+<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+<link rel="preload" href="assets/fonts/inter-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<style>
+:root{--gb:#00853f;--g:#009955;--gd:#00703c;--gs:#e3f5ea;--gx:#f3fbf6;--ink:#0d2318;--mut:#55665c;--line:#dfeee6;--r:18px}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:#fff;color:var(--ink);font:17px/1.6 Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+img{max-width:100%;height:auto;display:block}a{color:var(--gd)}
+.wrap{max-width:1120px;margin:0 auto;padding:0 20px}
+h1,h2{line-height:1.12;letter-spacing:-.02em;margin:0}
+h1{font-size:clamp(34px,5.4vw,56px);font-weight:800}h2{font-size:clamp(25px,3.2vw,34px);font-weight:800}
+nav.top{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.93);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+nav .in{display:flex;align-items:center;justify-content:space-between;height:64px;gap:12px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--g);font-size:20px;line-height:1.1}
+.brand img{width:34px;height:34px}.brand b{font-weight:800}
+.btn{display:inline-flex;align-items:center;justify-content:center;padding:14px 22px;border-radius:14px;font:700 16px/1 inherit;font-family:inherit;text-decoration:none;background:var(--gb);color:#fff;border:2px solid var(--gb);white-space:nowrap}
+.btn.ghost{background:#fff;color:var(--gd);border-color:var(--g)}
+.hero{position:relative;color:#fff;background:#0d2318 url(assets/venta/foto1.jpg) center/cover;padding:84px 0 76px}
+.hero:before{content:"";position:absolute;inset:0;background:linear-gradient(100deg,rgba(6,40,24,.92),rgba(6,40,24,.55))}
+.hero .wrap{position:relative}
+.hero p{font-size:clamp(18px,2vw,21px);max-width:560px;margin:16px 0 26px;color:#e3f5ea}
+.hero .btn{background:#fff;color:var(--gd);border-color:#fff}
+.eyebrow{display:inline-block;background:var(--gs);color:var(--gd);font-weight:700;font-size:13px;letter-spacing:.06em;text-transform:uppercase;padding:6px 12px;border-radius:999px;margin-bottom:16px}
+.index{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.index a{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.35);color:#fff;text-decoration:none;font-weight:600;font-size:14px;padding:8px 14px;border-radius:999px}
+.step{display:grid;grid-template-columns:1fr 1.25fr;gap:44px;align-items:center;padding:60px 0;border-bottom:1px solid var(--line);scroll-margin-top:70px}
+.step.rev{grid-template-columns:1.25fr 1fr}.step.rev .txt{order:2}
+.num{display:inline-flex;width:46px;height:46px;border-radius:50%;background:var(--gb);color:#fff;font-weight:800;font-size:22px;align-items:center;justify-content:center;margin-bottom:14px}
+.txt p{margin:14px 0 0}
+.tip{background:var(--gx);border:1px solid var(--line);border-radius:14px;padding:12px 14px;font-size:15px;color:#24412f}
+.url{font-size:19px;background:var(--gs);display:inline-block;padding:10px 16px;border-radius:12px;color:var(--gd)}
+.chips{list-style:none;padding:0;margin:12px 0 0;display:flex;flex-wrap:wrap;gap:8px}.chips li{background:#fff;border:1px solid var(--line);border-radius:999px;padding:8px 14px;font-weight:600;font-size:15px}
+.laptop{border-radius:16px;border:1px solid var(--line);box-shadow:0 26px 60px rgba(0,60,35,.16);overflow:hidden;background:#fff}
+.laptop .bar{height:26px;background:#f1f5f3;display:flex;align-items:center;gap:6px;padding:0 12px}
+.laptop .bar i{width:9px;height:9px;border-radius:50%;background:#cfdad4}
+.phone{max-width:290px;margin:0 auto;border:6px solid #0f2419;border-radius:34px;overflow:hidden;box-shadow:0 26px 60px rgba(0,60,35,.18)}
+.help{background:var(--gx);padding:64px 0;text-align:center}
+.help p{color:var(--mut);max-width:560px;margin:12px auto 22px}
+.faq{max-width:760px;margin:0 auto;padding:60px 20px 20px}
+.faq details{border-bottom:1px solid var(--line);padding:14px 0}.faq summary{font-weight:700;cursor:pointer}.faq details p{margin:10px 0 0;color:var(--mut)}
+footer{padding:26px 20px;text-align:center;color:var(--mut);font-size:14px;border-top:1px solid var(--line)}
+@media(max-width:860px){.step,.step.rev{grid-template-columns:1fr;gap:24px;padding:42px 0}.step.rev .txt{order:0}.hero{padding:56px 0 48px}nav .btn{padding:11px 14px;font-size:14px}.brand{font-size:18px}}
+</style>
+</head>
+<body>
+<nav class="top"><div class="wrap in"><a class="brand" href="/"><img src="assets/venta/logo.png" alt=""><span><b>MANQORA</b> PRO</span></a><a class="btn sm" href="/admin">Ir a mi panel</a></div></nav>
+<header class="hero"><div class="wrap"><span class="eyebrow">Guía de arranque</span><h1>Tu peluquería, lista en 15 minutos</h1><p>Ocho pasos, con capturas, para tener tu agenda y tus reservas funcionando. Sin saber de informática.</p><div class="index"><a href="#p1">1 Entrar</a><a href="#p2">2 Negocio</a><a href="#p3">3 Servicios</a><a href="#p4">4 Equipo</a><a href="#p5">5 Compartir</a><a href="#p6">6 Agenda</a><a href="#p7">7 Cobros</a><a href="#p8">8 Gestor</a></div></div></header>
+<main class="wrap">
+<section id="p1" class="step"><div class="txt"><span class="num">1</span><h2>Entra en tu panel</h2><p>Abre <b>manqorapro.com/admin</b> en el ordenador o en el móvil, escribe el email y la contraseña que te hemos dado y pulsa <b>Entrar al panel</b>.</p><p class="tip">💡 Consejo: en el móvil, añádelo a la pantalla de inicio y se abrirá como una app.</p></div><div class="vis"><div class="laptop"><div class="bar"><i></i><i></i><i></i></div><img src="assets/guia/login.jpg" alt="Pantalla de entrada al panel" loading="lazy" width="1360" height="820"></div></div></section>
+<section id="p2" class="step rev"><div class="txt"><span class="num">2</span><h2>Revisa los datos de tu negocio</h2><p>Entra en <b>Configuración</b> y abre <b>Negocio</b>. Comprueba el nombre, la dirección, el teléfono, el email y tu horario. Pulsa <b>Guardar cambios</b>.</p><p class="tip">💡 Este horario es el que verán tus clientes al reservar.</p></div><div class="vis"><div class="laptop"><div class="bar"><i></i><i></i><i></i></div><img src="assets/guia/config.jpg" alt="Configuración: datos del negocio" loading="lazy" width="1360" height="820"></div></div></section>
+<section id="p3" class="step"><div class="txt"><span class="num">3</span><h2>Pon tus servicios y precios</h2><p>Entra en <b>Servicios y extras</b>. Cambia con <b>Editar</b> lo que no sea correcto o añade lo que falte con <b>+ Servicio</b>. Los extras, como el afeitado o la mascarilla, se ofrecen al reservar.</p><p class="tip">💡 Lo que pongas aquí se ve en tu página de reservas.</p></div><div class="vis"><div class="laptop"><div class="bar"><i></i><i></i><i></i></div><img src="assets/guia/servicios.jpg" alt="Lista de servicios con precio y duración" loading="lazy" width="1360" height="820"></div></div></section>
+<section id="p4" class="step rev"><div class="txt"><span class="num">4</span><h2>Añade a tu equipo</h2><p>Entra en <b>Equipo</b> y pulsa <b>+ Profesional</b> para cada persona que atiende. Si trabajas solo, con tu propio nombre es suficiente.</p></div><div class="vis"><div class="laptop"><div class="bar"><i></i><i></i><i></i></div><img src="assets/guia/equipo.jpg" alt="Equipo de profesionales" loading="lazy" width="1360" height="820"></div></div></section>
+<section id="p5" class="step"><div class="txt"><span class="num">5</span><h2>Comparte tu página de reservas</h2><p>Es un enlace que tus clientes abren en el móvil para pedir cita sin llamarte. Lo tienes arriba en la Agenda, en <b>Abrir reserva pública</b>. Tiene esta forma:</p><p class="url">manqorapro.com/r/<b>tu-negocio</b></p><p>Ponlo donde te vean tus clientes:</p><ul class="chips"><li>📱 Tu Instagram y WhatsApp</li><li>🪧 Un cartel con QR en el local</li><li>📍 Tu ficha de Google Maps</li></ul><p class="tip">💡 Cuando alguien reserva, recibe un correo de confirmación con un enlace para cambiar o cancelar, y un recordatorio unas 24 horas antes.</p></div><div class="vis"><div class="phone"><img src="assets/venta/reserva-movil.jpg" alt="Página de reservas en el móvil" loading="lazy" width="780" height="1600"></div></div></section>
+<section id="p6" class="step rev"><div class="txt"><span class="num">6</span><h2>Mira tus citas del día</h2><p>Entra en <b>Agenda</b>. Verás las citas por profesional, con los huecos libres marcados en naranja. Puedes crear una cita con <b>+ Nueva cita</b>, moverla o cancelarla.</p><p class="tip">💡 Las reservas que llegan por internet aparecen solas, con la etiqueta online.</p></div><div class="vis"><div class="laptop"><div class="bar"><i></i><i></i><i></i></div><img src="assets/guia/agenda.jpg" alt="Agenda del día por profesional" loading="lazy" width="1360" height="820"></div></div></section>
+<section id="p7" class="step"><div class="txt"><span class="num">7</span><h2>Marca la cita como cobrada</h2><p>Cuando termines con un cliente, entra en <b>TPV / Cobros</b> y pulsa su cita. Elige efectivo, tarjeta o Bizum y confirma con <b>Marcar como cobrada</b>.</p><p class="tip">💡 Importante: Manqora Pro no cobra ni emite facturas ni tickets. El cobro lo haces tú en efectivo o con tu datáfono, y aquí solo queda apuntado.</p></div><div class="vis"><div class="laptop"><div class="bar"><i></i><i></i><i></i></div><img src="assets/guia/cobrar.jpg" alt="Ventana para marcar una cita como cobrada" loading="lazy" width="1360" height="820"></div></div></section>
+<section id="p8" class="step rev"><div class="txt"><span class="num">8</span><h2>Pásale tus cobros a tu gestor</h2><p>En <b>TPV / Cobros</b> pulsa <b>Exportar cobros</b>, elige las fechas y descarga el archivo. Lo abre cualquier Excel. Las facturas que recibes de tus proveedores las guardas en <b>Gastos</b>.</p><p class="tip">💡 El nombre de los clientes no se incluye, salvo que tú lo marques.</p></div><div class="vis"><div class="laptop"><div class="bar"><i></i><i></i><i></i></div><img src="assets/guia/exportar.jpg" alt="Ventana para exportar cobros" loading="lazy" width="1360" height="820"></div></div></section>
+
+</main>
+<section class="faq"><h2 style="margin-bottom:18px">Preguntas frecuentes</h2>
+<details><summary>¿Y si un cliente quiere cambiar o cancelar su cita?</summary><p>Lo hace él mismo desde el enlace de su correo de confirmación. Tú también puedes hacerlo desde la Agenda.</p></details>
+<details><summary>¿Y si me equivoco al apuntar un cobro?</summary><p>En TPV / Cobros, en la lista de últimos cobros, pulsa Anular. No se borra nada: queda anotada la corrección.</p></details>
+<details><summary>¿Puedo traer a mis clientes de otro programa?</summary><p>Sí. En Importar clientes subes tu lista en Excel o CSV y se cargan.</p></details>
+<details><summary>¿Se pierden mis datos?</summary><p>No. Todo se guarda en tu cuenta y hacemos una copia de seguridad cada semana.</p></details>
+<details><summary>¿Emite facturas o tickets?</summary><p>No. Manqora Pro es un sistema de reservas y gestión de citas; tú facturas con tu propio sistema.</p></details>
+</section>
+<section class="help"><div class="wrap"><h2>¿Te has atascado?</h2><p>Escríbenos y te ayudamos. Normalmente basta con un mensaje.</p><a class="btn" href="mailto:hola@manqorapro.com">hola@manqorapro.com</a></div></section>
+<footer>© Manqora Pro · Manqora Pro es un sistema de reservas y gestión de citas. No emite facturas ni tickets; el negocio factura con su propio sistema.</footer>
+</body></html>

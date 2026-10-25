@@ -8,3 +8,6 @@
 
 /reservas
   X-Robots-Tag: noindex
+
+/guia
+  X-Robots-Tag: noindex
