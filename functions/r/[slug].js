@@ -20,6 +20,7 @@ export async function onRequest({request,env,params}){
   const name=b.name.replace(/[<>"&]/g,'');
   return new HTMLRewriter()
     .on('link[rel="apple-touch-icon"]',{element(e){e.setAttribute('href','/'+base+'-180.png')}})
+    .on('link[rel="icon"]',{element(e){e.setAttribute('href','/'+base+'-192.png')}})
     .on('link#mf',{element(e){e.setAttribute('href','/r/'+slug+'?m=1')}})
     .on('meta[name="apple-mobile-web-app-title"]',{element(e){e.setAttribute('content',name)}})
     .transform(new Response(page.body,{status:200,headers:{'content-type':'text/html; charset=utf-8','cache-control':'no-cache'}}));

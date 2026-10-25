@@ -104,7 +104,7 @@ function brand(b){const bz=b.business||{},logo=safeImg(bz.logo),hero=safeImg(bz.
     s.innerHTML='<div class="card"><div class="local"><h2>Nuestro local</h2>'+(ph.length?'<div class="gal">'+ph.map(u=>'<img loading="lazy" alt="Interior de '+esc(b.name)+'" src="'+esc(u)+'">').join('')+'</div>':'')+(bz.address?'<p class="muted" style="margin:12px 0 0">📍 '+esc(bz.address)+(bz.phone?' · 📞 '+esc(bz.phone):'')+'</p>':'')+'</div></div>';s.hidden=false}}
 function bizIcon(b){try{const ic=(b.business||{}).icon;if(!/^assets\/[a-z0-9_-]+\/[A-Za-z0-9._-]+-$/i.test(String(ic||'')+'-'))return;
   const base=ic.replace(/-\d+\.png$/,'');if(base===ic)return;const o=location.origin+'/';
-  document.querySelector('link[rel=apple-touch-icon]').href=o+base+'-180.png';
+  document.querySelector('link[rel=apple-touch-icon]').href=o+base+'-180.png';document.querySelector('link[rel=icon]').href=o+base+'-192.png';
   const m={name:b.name,short_name:b.name.slice(0,12),start_url:o+(location.pathname.replace(/^\//,'')||'')+location.search,scope:o,display:'standalone',background_color:'#ffffff',theme_color:'#009955',lang:'es',icons:[{src:o+base+'-192.png',sizes:'192x192',type:'image/png'},{src:o+base+'-512.png',sizes:'512x512',type:'image/png'}]};
   document.getElementById('mf').href=URL.createObjectURL(new Blob([JSON.stringify(m)],{type:'application/manifest+json'}));
   const t=document.querySelector('meta[name=apple-mobile-web-app-title]');if(t)t.content=b.name}catch(e){}}
