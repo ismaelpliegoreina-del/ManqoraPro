@@ -91,6 +91,8 @@ const SB_KEY='sb_publishable_ITxafkZCiuhtCUTvxPSZJA_CerS0vtY';
 const qs=new URLSearchParams(location.search);
 const SLUG=(qs.get('n')||(location.pathname.match(/^\/r\/([^\/?#]+)/)||[])[1]||'').toLowerCase().replace(/[^a-z0-9-]/g,'');
 const CODE=(qs.get('cita')||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
+/* MANTENIMIENTO: true = la gente ve solo la pantalla de mantenimiento. Para publicar la reserva, ponerlo en false. (?preview=1 la deja ver para probarla) */
+const MAINT=true;
 const TZ='Europe/Madrid';
 const app=document.getElementById('app');
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -124,6 +126,10 @@ function bizIcon(b){try{const ic=(b.business||{}).icon;if(!/^assets\/[a-z0-9_-]+
   const t=document.querySelector('meta[name=apple-mobile-web-app-title]');if(t)t.content=b.name}catch(e){}}
 async function init(){
   if(!SLUG){document.getElementById('biz').textContent='Reservas';document.getElementById('bizsub').textContent='';app.innerHTML='<div class="card"><p>Falta indicar el negocio. Usa el enlace de reservas que te ha dado tu peluquería.</p></div>';return}
+  if(MAINT&&!CODE&&!qs.has('preview')){
+    document.getElementById('biz').textContent='Reservas en mantenimiento';document.getElementById('bizsub').textContent='Volvemos enseguida';
+    app.innerHTML='<div class="card" style="text-align:center;padding:32px 20px"><div style="font-size:44px;line-height:1" aria-hidden="true">🛠️</div><h2 style="justify-content:center;margin:14px 0 8px;font-size:20px">Estamos mejorando las reservas</h2><p class="muted" style="margin:0">Ahora mismo no se pueden hacer reservas online. Vuelve a intentarlo en un rato o llámanos por teléfono.</p></div>';
+    return}
   const b=await rpc('public_business',{p_slug:SLUG});
   if(!b||!b.ok){app.innerHTML='<div class="card"><p>'+esc(ERR[b&&b.error]||ERR.unavailable)+'</p></div>';return}
   S.biz=b;document.title='Reserva · '+b.name;document.getElementById('biz').textContent=b.name;
