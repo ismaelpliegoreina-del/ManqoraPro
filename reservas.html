@@ -33,6 +33,20 @@ header.top.hero{background:linear-gradient(180deg,rgba(11,18,32,.45),rgba(11,18,
 .card h2{margin:0 0 10px;font-size:17px;display:flex;gap:8px;align-items:center}
 .num{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--accent);color:#fff;font-size:13px}
 .locked{opacity:.5;pointer-events:none}
+.staff{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:10px}
+.pro{position:relative;display:flex;flex-direction:column;align-items:center;gap:8px;padding:16px 6px 12px;background:#fff;border:2px solid var(--line);border-radius:16px;cursor:pointer;font:inherit;color:inherit;text-align:center}
+.pro:hover{border-color:var(--accent)}
+.pro.sel{border-color:var(--accent);background:var(--accent-soft);box-shadow:0 0 0 3px rgba(45,106,62,.16)}
+.pro.dim{opacity:.55}
+.pro.dim.sel,.pro.dim:hover{opacity:1}
+.av{width:60px;height:60px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:800;font-size:24px;box-shadow:0 2px 6px rgba(0,0,0,.18)}
+.pro b{font-size:15px;line-height:1.2}
+.tick{position:absolute;top:8px;right:8px;width:22px;height:22px;border-radius:50%;background:var(--accent);color:#fff;display:none;place-items:center;font-size:13px;font-weight:800}
+.pro.sel .tick{display:grid}
+[data-sec]{scroll-margin-top:12px}
+.reveal{animation:rv .28s ease-out}
+@keyframes rv{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.reveal{animation:none}}
 .opt{display:flex;justify-content:space-between;gap:10px;align-items:center;width:100%;text-align:left;background:#fff;border:1.5px solid var(--line);border-radius:12px;padding:12px;margin-bottom:8px;cursor:pointer;font:inherit;color:inherit}
 .opt:hover{border-color:var(--accent)}
 .opt.sel{border-color:var(--accent);background:var(--accent-soft)}
@@ -93,7 +107,7 @@ async function rpc(name,args){
     return await r.json();
   }catch(e){return{ok:false,error:'network'}}
 }
-const S={biz:null,service:null,emp:null,addons:[],day:'',slots:null,slot:null,name:'',phone:'',email:'',priv:false,mkt:false,busy:false,msg:'',done:null,loading:false};
+const S={seen:{},biz:null,service:null,emp:null,addons:[],day:'',slots:null,slot:null,name:'',phone:'',email:'',priv:false,mkt:false,busy:false,msg:'',done:null,loading:false};
 
 const safeImg=p=>/^(assets\/[a-z0-9_-]+\/[A-Za-z0-9._-]+|https:\/\/[^\s"'<>()]+)$/i.test(String(p||''))?String(p):'';
 function brand(b){const bz=b.business||{},logo=safeImg(bz.logo),hero=safeImg(bz.hero),ph=(bz.photos||[]).map(safeImg).filter(Boolean).slice(0,4);
@@ -116,6 +130,7 @@ async function init(){
   const ad=b.business&&b.business.address,ph=b.business&&b.business.phone;
   document.getElementById('bizsub').textContent=[ad,ph].filter(Boolean).join(' · ')||'Reserva online';brand(b);bizIcon(b);
   if(CODE)return miCita();
+  const pl=pros();if(pl.length===1)S.emp=pl[0].id;
   if(!b.bookable){app.innerHTML='<div class="card"><div class="msg warn">Las reservas online están cerradas temporalmente. Puedes llamar al negocio'+(ph?' al <b>'+esc(ph)+'</b>':'')+'.</div></div>';return}
   render();
 }
@@ -123,36 +138,64 @@ async function init(){
 function dur(){return S.service?S.service.duration_min+S.addons.reduce((a,id)=>{const u=S.biz.upsells.find(x=>x.id===id);return a+(u?u.extra_min:0)},0):0}
 function total(){return S.service?+S.service.price+S.addons.reduce((a,id)=>{const u=S.biz.upsells.find(x=>x.id===id);return a+(u?+u.price:0)},0):0}
 
+/* Profesionales con al menos un servicio reservable online */
+const svcIds=e=>Array.isArray(e.service_ids)?e.service_ids:S.biz.services.map(x=>x.id);
+const upIds=e=>Array.isArray(e.upsell_ids)?e.upsell_ids:S.biz.upsells.map(x=>x.id);
+const pros=()=>S.biz.employees.filter(e=>svcIds(e).length);
+const PAL=['#2d6a3e','#1d4ed8','#b45309','#7e22ce','#be123c','#0e7490'];
+const proColor=(e,i)=>/^#[0-9a-f]{3,8}$/i.test(String(e.color||''))?e.color:PAL[i%PAL.length];
+
 function render(){
   if(S.done)return renderDone();
-  const b=S.biz,sv=S.service,lock=c=>c?'':' locked';
+  const b=S.biz,sv=S.service,emp=S.emp?b.employees.find(x=>x.id===S.emp):null,list=pros();
+  const fresh=[];
+  const sec=(key,inner)=>{const isNew=!S.seen[key];if(isNew){S.seen[key]=1;fresh.push(key)}return'<div class="card'+(isNew?' reveal':'')+'" data-sec="'+key+'">'+inner+'</div>'};
   let h='';
-  h+='<div class="card"><h2><span class="num">1</span>Elige el servicio</h2>'+b.services.map(s=>'<button class="opt'+(sv&&sv.id===s.id?' sel':'')+'" data-svc="'+esc(s.id)+'"><span>'+esc(s.name)+'<small>'+esc(s.duration_min)+' min</small></span><span class="price">'+eur(s.price)+'</span></button>').join('')+'</div>';
-  h+='<div class="card'+lock(sv)+'"><h2><span class="num">2</span>Profesional y extras</h2><label class="f" for="emp">Profesional</label><select id="emp"><option value="">Me da igual (primero libre)</option>'+b.employees.map(e=>'<option value="'+esc(e.id)+'"'+(S.emp===e.id?' selected':'')+'>'+esc(e.name)+'</option>').join('')+'</select>';
-  if(b.upsells.length)h+='<label class="f">Extras (opcional)</label>'+b.upsells.map(u=>'<label class="check"><input type="checkbox" data-up="'+esc(u.id)+'"'+(S.addons.includes(u.id)?' checked':'')+'><span>'+esc(u.name)+' · '+eur(u.price)+(u.extra_min?' · +'+esc(u.extra_min)+' min':'')+'</span></label>').join('');
-  h+='</div>';
-  const min=todayMadrid(),max=addDays(min,120);
-  h+='<div class="card'+lock(sv)+'"><h2><span class="num">3</span>Día y hora</h2><label class="f" for="day">Día</label><input type="date" id="day" min="'+min+'" max="'+max+'" value="'+esc(S.day)+'">';
-  if(S.loading)h+='<p class="muted">Buscando horas libres…</p>';
-  else if(S.slots){h+=S.slots.length?'<label class="f">Horas disponibles</label><div class="chips">'+S.slots.map(x=>'<button class="chip'+(S.slot&&S.slot.starts_at===x.starts_at?' sel':'')+'" data-slot="'+esc(x.starts_at)+'" data-emp="'+esc(x.employee_id)+'">'+esc(x.time)+'</button>').join('')+'</div>':'<div class="msg warn">No quedan horas libres ese día'+(S.emp?' con ese profesional':'')+'. Prueba otro día.</div>'}
-  h+='</div>';
-  h+='<div class="card'+lock(S.slot)+'"><h2><span class="num">4</span>Tus datos</h2>';
-  if(S.slot){const e=b.employees.find(x=>x.id===S.slot.employee_id);h+='<div class="sum"><div><span>Servicio</span><b>'+esc(sv.name)+'</b></div><div><span>Cuándo</span><b>'+esc(fmtDay(S.slot.starts_at))+', '+esc(fmtHour(S.slot.starts_at))+'</b></div><div><span>Con</span><b>'+esc(e?e.name:'')+'</b></div><div><span>Duración</span><b>'+dur()+' min</b></div><div><span>Precio</span><b>'+eur(total())+'</b></div></div>'}
-  h+='<label class="f" for="name">Nombre y apellidos</label><input type="text" id="name" autocomplete="name" maxlength="80" value="'+esc(S.name)+'">'
-   +'<label class="f" for="phone">Teléfono móvil</label><input type="tel" id="phone" autocomplete="tel" inputmode="tel" maxlength="20" value="'+esc(S.phone)+'">'
-   +'<label class="f" for="email">Email (te enviaremos la confirmación)</label><input type="email" id="email" autocomplete="email" maxlength="120" value="'+esc(S.email)+'">'
-   +'<input class="hp" type="text" id="website" tabindex="-1" autocomplete="off" aria-hidden="true">'
-   +'<label class="check"><input type="checkbox" id="priv"'+(S.priv?' checked':'')+'><span>He leído y acepto la <a href="admin.html#legal=priv" target="_blank" rel="noopener">política de privacidad</a>. *</span></label>'
-   +'<label class="check"><input type="checkbox" id="mkt"'+(S.mkt?' checked':'')+'><span>Quiero recibir promociones y novedades (opcional).</span></label>';
-  if(S.msg)h+='<div class="msg err" role="alert">'+esc(S.msg)+'</div>';
-  h+='<button class="btn" id="go"'+(S.busy?' disabled':'')+'>'+(S.busy?'Reservando…':'Confirmar reserva')+'</button>';
-  h+='<p class="muted" style="margin-top:10px">Puedes cancelar o cambiar tu cita online hasta '+esc(b.cancel_min_hours)+' horas antes.</p></div>';
+  /* 1 · Profesional (siempre visible, sin «el primero libre») */
+  h+=sec('pro','<h2><span class="num">1</span>Elige tu profesional</h2>'+(list.length?'<div class="staff">'+list.map((e,i)=>'<button class="pro'+(emp&&emp.id===e.id?' sel':'')+(emp&&emp.id!==e.id?' dim':'')+'" data-pro="'+esc(e.id)+'" aria-pressed="'+(emp&&emp.id===e.id)+'"><span class="tick" aria-hidden="true">✓</span><span class="av" style="background:'+esc(proColor(e,i))+'" aria-hidden="true">'+esc((e.name||'?').trim().charAt(0).toUpperCase())+'</span><b>'+esc(e.name)+'</b></button>').join('')+'</div>':'<div class="msg warn">Ahora mismo no hay profesionales disponibles para reservar online. Llama al negocio.</div>'));
+  /* 2 · Servicio y extras del profesional elegido */
+  if(emp){
+    const ok=svcIds(emp),svs=b.services.filter(x=>ok.includes(x.id)),uok=upIds(emp),ups=b.upsells.filter(u=>uok.includes(u.id));
+    let c='<h2><span class="num">2</span>Elige el servicio</h2><p class="muted" style="margin:-4px 0 10px">Con '+esc(emp.name)+'</p>'+svs.map(x=>'<button class="opt'+(sv&&sv.id===x.id?' sel':'')+'" data-svc="'+esc(x.id)+'"><span>'+esc(x.name)+'<small>'+esc(x.duration_min)+' min</small></span><span class="price">'+eur(x.price)+'</span></button>').join('');
+    if(sv&&ups.length)c+='<label class="f">Extras (opcional)</label>'+ups.map(u=>'<label class="check"><input type="checkbox" data-up="'+esc(u.id)+'"'+(S.addons.includes(u.id)?' checked':'')+'><span>'+esc(u.name)+' · '+eur(u.price)+(u.extra_min?' · +'+esc(u.extra_min)+' min':'')+'</span></label>').join('');
+    h+=sec('svc',c);
+  }
+  /* 3 · Fecha */
+  if(emp&&sv){
+    const min=todayMadrid(),max=addDays(min,120);
+    h+=sec('day','<h2><span class="num">3</span>Elige el día</h2><label class="f" for="day">Día</label><input type="date" id="day" min="'+min+'" max="'+max+'" value="'+esc(S.day)+'">'+(S.day?'':'<p class="muted" style="margin:10px 0 0">Elige un día para ver las horas libres de '+esc(emp.name)+'.</p>'));
+  }
+  /* 4 · Hora */
+  if(emp&&sv&&S.day){
+    let c='<h2><span class="num">4</span>Elige la hora</h2>';
+    if(S.loading)c+='<p class="muted">Buscando horas libres…</p>';
+    else if(S.slots)c+=S.slots.length?'<div class="chips">'+S.slots.map(x=>'<button class="chip'+(S.slot&&S.slot.starts_at===x.starts_at?' sel':'')+'" data-slot="'+esc(x.starts_at)+'" data-emp="'+esc(x.employee_id)+'">'+esc(x.time)+'</button>').join('')+'</div>':'<div class="msg warn">No quedan horas libres ese día con '+esc(emp.name)+'. Prueba otro día.</div>';
+    h+=sec('hour',c);
+  }
+  /* 5 · Datos */
+  if(S.slot){
+    const e=b.employees.find(x=>x.id===S.slot.employee_id);
+    let c='<h2><span class="num">5</span>Tus datos</h2>';
+    c+='<div class="sum"><div><span>Servicio</span><b>'+esc(sv.name)+'</b></div><div><span>Cuándo</span><b>'+esc(fmtDay(S.slot.starts_at))+', '+esc(fmtHour(S.slot.starts_at))+'</b></div><div><span>Con</span><b>'+esc(e?e.name:'')+'</b></div><div><span>Duración</span><b>'+dur()+' min</b></div><div><span>Precio</span><b>'+eur(total())+'</b></div></div>';
+    c+='<label class="f" for="name">Nombre y apellidos</label><input type="text" id="name" autocomplete="name" maxlength="80" value="'+esc(S.name)+'">'
+     +'<label class="f" for="phone">Teléfono móvil</label><input type="tel" id="phone" autocomplete="tel" inputmode="tel" maxlength="20" value="'+esc(S.phone)+'">'
+     +'<label class="f" for="email">Email (te enviaremos la confirmación)</label><input type="email" id="email" autocomplete="email" maxlength="120" value="'+esc(S.email)+'">'
+     +'<input class="hp" type="text" id="website" tabindex="-1" autocomplete="off" aria-hidden="true">'
+     +'<label class="check"><input type="checkbox" id="priv"'+(S.priv?' checked':'')+'><span>He leído y acepto la <a href="admin.html#legal=priv" target="_blank" rel="noopener">política de privacidad</a>. *</span></label>'
+     +'<label class="check"><input type="checkbox" id="mkt"'+(S.mkt?' checked':'')+'><span>Quiero recibir promociones y novedades (opcional).</span></label>';
+    if(S.msg)c+='<div class="msg err" role="alert">'+esc(S.msg)+'</div>';
+    c+='<button class="btn" id="go"'+(S.busy?' disabled':'')+'>'+(S.busy?'Reservando…':'Confirmar reserva')+'</button>';
+    c+='<p class="muted" style="margin-top:10px">Puedes cancelar o cambiar tu cita online hasta '+esc(b.cancel_min_hours)+' horas antes.</p>';
+    h+=sec('data',c);
+  }else if(S.msg){h+='<div class="msg err" role="alert" style="margin-top:14px">'+esc(S.msg)+'</div>'}
   keepFocus(()=>{app.innerHTML=h});
+  /* al abrirse un paso nuevo, llevar la vista hasta él (solo si es una acción del cliente, no la carga inicial) */
+  if(S.go&&fresh.length){const el=app.querySelector('[data-sec="'+fresh[fresh.length-1]+'"]');if(el&&fresh[fresh.length-1]!=='pro'){const rm=window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches;setTimeout(()=>el.scrollIntoView({behavior:rm?'auto':'smooth',block:'start'}),60)}}
 }
 function keepFocus(fn){const a=document.activeElement,id=a&&a.id,pos=a&&a.selectionStart;fn();if(id){const e=document.getElementById(id);if(e&&e.focus){e.focus();try{if(pos!=null)e.setSelectionRange(pos,pos)}catch(_){}}}}
 
 async function loadSlots(){
-  S.slot=null;S.slots=null;if(!S.service||!S.day){render();return}
+  S.slot=null;S.slots=null;if(!S.service||!S.day||!S.emp){render();return}
   S.loading=true;render();
   const r=await rpc('public_slots',{p_slug:SLUG,p_service:S.service.id,p_day:S.day,p_employee:S.emp||null,p_upsells:S.addons});
   S.loading=false;
@@ -161,16 +204,24 @@ async function loadSlots(){
 }
 
 app.addEventListener('click',async e=>{
-  const t=e.target.closest('[data-svc],[data-slot],#go,[data-act]');if(!t)return;
-  if(t.dataset.svc){S.service=S.biz.services.find(x=>x.id===t.dataset.svc);S.addons=[];S.msg='';await loadSlots();return}
-  if(t.dataset.slot){S.slot={starts_at:t.dataset.slot,employee_id:t.dataset.emp};S.msg='';render();return}
+  const t=e.target.closest('[data-pro],[data-svc],[data-slot],#go,[data-act]');if(!t)return;
+  if(t.dataset.pro){
+    if(S.emp===t.dataset.pro)return;
+    const em=S.biz.employees.find(x=>x.id===t.dataset.pro);if(!em)return;
+    S.go=true;S.emp=em.id;S.msg='';
+    if(S.service&&!svcIds(em).includes(S.service.id)){S.service=null;S.addons=[]}
+    else S.addons=S.addons.filter(id=>upIds(em).includes(id));
+    S.slot=null;S.slots=null;
+    if(!S.service){delete S.seen.day;delete S.seen.hour;delete S.seen.data;render();return}
+    await loadSlots();return}
+  if(t.dataset.svc){S.go=true;S.service=S.biz.services.find(x=>x.id===t.dataset.svc);S.addons=[];S.msg='';await loadSlots();return}
+  if(t.dataset.slot){S.go=true;S.slot={starts_at:t.dataset.slot,employee_id:t.dataset.emp};S.msg='';render();return}
   if(t.id==='go')return book();
 });
 app.addEventListener('change',async e=>{
   const t=e.target;
-  if(t.id==='emp'){S.emp=t.value||null;await loadSlots()}
-  else if(t.dataset&&t.dataset.up){const id=t.dataset.up,i=S.addons.indexOf(id);if(t.checked&&i<0)S.addons.push(id);if(!t.checked&&i>=0)S.addons.splice(i,1);await loadSlots()}
-  else if(t.id==='day'){S.day=t.value;await loadSlots()}
+  if(t.dataset&&t.dataset.up){const id=t.dataset.up,i=S.addons.indexOf(id);if(t.checked&&i<0)S.addons.push(id);if(!t.checked&&i>=0)S.addons.splice(i,1);await loadSlots()}
+  else if(t.id==='day'){S.go=true;S.day=t.value;await loadSlots()}
   else if(t.id==='priv'){S.priv=t.checked;if(S.msg===ERR.consent_required){S.msg='';render()}}
   else if(t.id==='mkt'){S.mkt=t.checked}
 });
