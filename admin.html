@@ -2124,6 +2124,15 @@ accLock=function(){};                   /* no hay pantalla de PIN: el control de
 isLogged=function(){return !!CL.ses};
 
 /* ---------- emails: se encolan en la base de datos ---------- */
+/* Correos enviados (nube): lista real desde la base de datos, no la simulación local */
+outboxOpen=async function(){
+  const T={confirm:'Confirmación',pending:'Reserva pendiente',change:'Cambio',cancel:'Cancelación',reminder:'Recordatorio'},ST={sent:['Enviado','ok'],pending:['En cola','pending'],error:['No enviado','danger-b']};
+  openModal('<h2>✉ Correos enviados</h2><p class="muted">Cargando…</p>');
+  if(CL.role==='staff'){openModal('<h2>✉ Correos enviados</h2><div class="notice">Solo el propietario o un encargado puede ver los correos enviados.</div><div class="actions" style="margin-top:12px"><button class="btn" onclick="closeModal()">Cerrar</button></div>');return}
+  const{data,error}=await CL.sb.from('outbox_emails').select('id,to_email,template,status,created_at,sent_at,payload').eq('tenant_id',CL.tid).order('created_at',{ascending:false}).limit(60);
+  if(error){openModal('<h2>✉ Correos enviados</h2><div class="notice">No se pudo cargar la lista. Comprueba la conexión e inténtalo de nuevo.</div><div class="actions" style="margin-top:12px"><button class="btn" onclick="closeModal()">Cerrar</button></div>');return}
+  const fmt=iso=>new Date(iso).toLocaleString('es-ES',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit',timeZone:MZ});
+  openModal(`<h2>✉ Correos enviados</h2><p class="muted">Envío real activo. Aquí ves los últimos correos que reciben tus clientes (confirmaciones, cambios, cancelaciones y recordatorios).</p>${(data||[]).length?data.map(r=>{const p=r.payload||{},st=ST[r.status]||[r.status,'pending'];return`<details class="mini" style="margin-bottom:8px"><summary><b>${esc(T[r.template]||r.template)}</b> · ${esc(r.to_email)} · ${fmt(r.sent_at||r.created_at)} <span class="badge ${st[1]}">${esc(st[0])}</span></summary><div class="small" style="margin-top:8px">${p.service?'<div><b>Servicio:</b> '+esc(p.service)+'</div>':''}${p.starts_at?'<div><b>Cita:</b> '+fmt(p.starts_at)+'</div>':''}${p.employee?'<div><b>Con:</b> '+esc(p.employee)+'</div>':''}${p.code?'<div><b>Código:</b> '+esc(p.code)+'</div>':''}${r.status==='error'?'<div class="muted" style="margin-top:6px">No se pudo enviar este correo. Revisa que el email del cliente sea correcto.</div>':''}</div></details>`}).join(''):'<div class="notice">Aún no se ha enviado ningún correo.</div>'}<div class="actions" style="margin-top:12px"><button class="btn" onclick="closeModal()">Cerrar</button></div>`)};
 {const _e=enviarEmailCita;enviarEmailCita=function(id,type){const a=db.appointments.find(x=>x.id===id),c=a&&client(a.clientId);if(!a||!c||!c.email)return false;
   ensureCodes(db);normCodes();const ok=_e(id,type);if(!ok)return false;
   const tpl=(type==='confirm'&&a.status==='pending')?'pending':type;
