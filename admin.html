@@ -2160,7 +2160,12 @@ isLogged=function(){return !!CL.ses};
 /* ===== Accesos del equipo (nube): el propietario da acceso con contraseña inicial; en el primer acceso se obliga a cambiarla ===== */
 CL.access={};
 const ACC_ERR={not_owner:'Solo el propietario puede gestionar accesos.',no_session:'Tu sesión ha caducado. Vuelve a entrar.',invalid_email:'El email no es válido.',weak_password:'La contraseña debe tener al menos 8 caracteres.',invalid_employee:'Este profesional aún no se ha sincronizado. Espera unos segundos e inténtalo de nuevo.',already_has_access:'Este profesional ya tiene acceso.',email_in_use:'Ese email ya tiene una cuenta. Usa otro.',create_failed:'No se pudo crear la cuenta. Inténtalo de nuevo.',no_access:'Este profesional no tiene acceso.',is_owner:'No se puede cambiar el acceso de un propietario.',reset_failed:'No se pudo cambiar la contraseña.',server_error:'Error del servidor. Inténtalo de nuevo.'};
-async function accCall(body){try{const{data,error}=await CL.sb.functions.invoke('team-access',{body:Object.assign({tenant_id:CL.tid},body)});if(error)return{ok:false,msg:'No se pudo conectar. Inténtalo de nuevo.'};if(!data||!data.ok)return{ok:false,msg:ACC_ERR[(data||{}).error]||'No se pudo completar la acción.'};return{ok:true,data}}catch(e){return{ok:false,msg:'No se pudo conectar. Inténtalo de nuevo.'}}}
+async function accCall(body){try{const{data,error}=await CL.sb.functions.invoke('team-access',{body:Object.assign({tenant_id:CL.tid},body)});
+  if(error){let d=null;try{if(error.context&&error.context.json)d=await error.context.json()}catch(e){}
+    if(d&&d.ok===false)return{ok:false,msg:ACC_ERR[d.error]||'No se pudo completar la acción.'};
+    console.error('team-access',error);const st=error.context&&error.context.status;
+    return{ok:false,msg:'No se pudo conectar'+(st?' (error '+st+')':error.name?' ('+error.name+')':'')+'. Inténtalo de nuevo.'}}
+  if(!data||!data.ok)return{ok:false,msg:ACC_ERR[(data||{}).error]||'No se pudo completar la acción.'};return{ok:true,data}}catch(e){console.error('team-access',e);return{ok:false,msg:'No se pudo conectar ('+(e&&e.message||'error')+'). Inténtalo de nuevo.'}}}
 async function accLoad(){if(CL.role!=='owner')return;const r=await accCall({action:'list'});if(!r.ok)return;CL.access={};(r.data.members||[]).forEach(m=>{if(m.employee_app_id!=null)CL.access[m.employee_app_id]=m});if(currentView==='team')renderTeam()}
 function genPass(){const a='abcdefghjkmnpqrstuvwxyz',b='ABCDEFGHJKMNPQRSTUVWXYZ',c='23456789',all=a+b+c,r=new Uint32Array(10);crypto.getRandomValues(r);let p=a[r[0]%a.length]+b[r[1]%b.length]+c[r[2]%c.length];for(let i=3;i<10;i++)p+=all[r[i]%all.length];return p}
 {const _rt=renderTeam;renderTeam=function(){_rt();if(CL.role!=='owner')return;
