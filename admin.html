@@ -1689,6 +1689,7 @@ function aiAdvice(){
   if(!aiGate('stock')){const low=db.products.filter(p=>p.stock<=p.min);if(low.length)acts.push({t:'Repón <b>'+aiJ(low.slice(0,3).map(p=>esc(p.name)))+'</b> antes de quedarte sin stock.',v:0,q:'¿Qué productos debo reponer?'})}
   if(!aiGate('loyalty')&&L().enabled){const near=db.clients.filter(c=>L().needed-loy(c).stamps<=1);if(near.length)acts.push({t:'Avisa a quienes están a 1 sello del premio: vuelven antes y gastan más.',v:0,q:'¿Qué clientes están cerca de su recompensa?'})}
   if(mod('tpv')&&!aiGateSales()){const up=aiUpsellStats({from:dAdd(T,-29),to:T});if(up.n>=5&&up.rate<.25)acts.push({t:'Solo el <b>'+Math.round(up.rate*100)+'%</b> de tus cobros incluye un extra. Proponer el extra en el sillón puede subir el cobro medio.',v:0,q:'¿Cómo van los extras?'})}
+  aiExtraIns().filter(i=>i.lvl==='warn'||/vacío|una sola vez/.test(i.t)).slice(0,2).forEach(i=>acts.push({t:i.t,v:0,q:i.q}));
   let h='<b>Plan de acción</b>'+(acts.length?'<ol class="ai-list">'+acts.slice(0,6).map(a=>`<li>${a.t}${a.v>0?' <span class="muted">(≈'+money(a.v)+')</span>':''} <a href="#" class="ai-more" data-q="${esc(a.q)}" onclick="aiAsk(this.dataset.q);return false">Hacerlo</a></li>`).join('')+'</ol>':'<p>Ahora mismo no veo acciones prioritarias.</p>');
   const warn=ins.filter(i=>i.lvl==='warn').length;h+=`<p class="small muted">Detecciones activas: ${ins.length} (${warn} requieren atención).</p>`;
   return{h,chips:['Resumen del día','Previsión de este mes','¿Qué día vendo más?']}}
@@ -1704,7 +1705,7 @@ function aiSales(P,ent,cmpAsked){
     return{h:`<b>${names}</b> en <b>${esc(cur.label)}</b>: <b>${n}</b> servicio${n===1?'':'s'} y <b>${money(rev)}</b> ${n&&pn?aiDelta(aiPct(rev,prv))+' vs '+esc(prev.label):''}`,chips:['Servicios más vendidos','Ventas por profesional'],ctx:{intent:'sales'}}}
   if(!st.list.length)return{h:'No hay ventas registradas'+sub+' en <b>'+esc(cur.label)+'</b>.',chips:['Ventas de ayer','Ventas de este mes'],ctx:{intent:'sales'}};
   let h=`Ventas${sub} de <b>${esc(cur.label)}</b>: <b>${money(st.total)}</b> en ${st.n} cobro${st.n===1?'':'s'} (cobro medio ${money(st.avg)}).`;
-  if(pst.total)h+=`<br>${aiDelta(aiPct(st.total,pst.total))} frente a ${esc(prev.label.replace(/^el /,'al '))} (${money(pst.total)}).`;
+  if(pst.total)h+=`<br>${aiDelta(aiPct(st.total,pst.total))} ${/^el /.test(prev.label)?'frente al ':'frente a '}${esc(prev.label.replace(/^el /,''))} (${money(pst.total)}).`;
   h+=`<br><span class="muted">${st.tips?'Propinas '+money(st.tips):''}</span>`;
   const days=aiDiff(cur.from,cur.to)+1;
   if(days>=3&&days<=62){const v=[];for(let d=cur.from;d<=cur.to;d=dAdd(d,1))v.push(aiStat(aiSalesIn(aiDay(d),f)).total);h+='<div style="margin-top:6px">'+aiSpark(v)+'<div class="small muted">Evolución diaria</div></div>'}
@@ -1905,11 +1906,11 @@ function aiDo(id){const p=AIX.pend[id];if(!p||p.done)return;if(!aiOk('agenda')){
 function aiInfo(){const b=db.business,s=db.settings;return{h:`<b>${esc(b.name)}</b><ul class="ai-list"><li>🕘 ${esc(openDaysText())} · ${s.opening}–${s.closing}</li>${b.address?'<li>📍 '+esc(b.address)+'</li>':''}${b.phone?'<li>📞 '+esc(b.phone)+'</li>':''}${b.email?'<li>✉️ '+esc(b.email)+'</li>':''}<li>👥 Equipo activo: ${aiJ(db.team.filter(t=>t.active).map(t=>esc(t.name)))}</li></ul>`,ctx:{intent:'info'}}}
 const AI_NAV=[['dashboard','dashboard panel inicio resumen'],['agenda','agenda calendario'],['tpv','tpv cobrar cobros'],['clients','crm clientes'],['import','importar'],['loyalty','fidelizacion sellos'],['services','servicios extras'],['team','equipo plantilla'],['cash','cierre caja'],['stock','stock inventario'],['expenses','gastos'],['commissions','comisiones'],['settings','configuracion ajustes']];
 function aiNav(mk){let best=null;AI_NAV.forEach(([v,ws])=>{const sc=ws.split(' ').filter(w=>mk.T.some(t=>aiTokEq(t,w))).length;if(sc&&(!best||sc>best.sc))best={v,sc}});if(!best)return null;const mk2=Object.keys(MODVIEW).find(k=>MODVIEW[k]===best.v);if(mk2&&!mod(mk2))return{h:'Esa sección está desactivada en Configuración › Módulos.'};if(!aiOk(best.v))return{h:'Tu rol no tiene acceso a esa sección.'};const nm=(AI_NAV.find(x=>x[0]===best.v)||[])[0];return{h:'Te llevo allí.',after:()=>go(best.v)}}
-function aiHelp(){const ex=[['📊 Ventas','«¿Cuánto he vendido hoy?», «ventas de octubre», «compara este mes con el anterior», «ventas de Javi esta semana»'],['👥 Clientes','«háblame de Carlos», «mejores clientes», «¿a quién debo recontactar?», «clientes nuevos este mes»'],['📅 Agenda','«citas de mañana», «¿cuándo viene Álvaro?», «primer hueco libre», «¿cómo tengo la semana?»'],['✍️ Acciones (con confirmación)','«apunta a Carlos mañana a las 11 con Javi», «cancela la cita de Miguel», «mueve la cita de Sergio al viernes a las 17»'],['💶 Dinero','«resumen de caja», «beneficio del mes», «gastos por categoría», «comisiones»'],['📦 Negocio','«¿qué debo reponer?», «servicio más rentable», «¿cómo van los extras?», «¿qué día vendo más?», «previsión del mes»'],['✉️ Redactar','«redacta un mensaje para reactivar clientes», «recordatorio para Carlos», «promoción del 15% para el día más flojo»'],['🧭 Ir a','«abre stock», «llévame a gastos»']];
+function aiHelp(){const ex=[['📊 Ventas','«¿Cuánto he vendido hoy?», «ventas de octubre», «compara este mes con el anterior», «ventas de Javi esta semana»'],['👥 Clientes','«háblame de Carlos», «mejores clientes», «¿a quién debo recontactar?», «clientes nuevos este mes»'],['📅 Agenda','«citas de mañana», «¿cuándo viene Álvaro?», «primer hueco libre», «¿cómo tengo la semana?»'],['✍️ Acciones (con confirmación)','«apunta a Carlos mañana a las 11 con Javi», «cancela la cita de Miguel», «mueve la cita de Sergio al viernes a las 17»'],['💶 Dinero','«resumen de caja», «beneficio del mes», «gastos por categoría», «comisiones»'],['📦 Negocio','«¿qué debo reponer?», «servicio más rentable», «¿cómo van los extras?», «¿qué día vendo más?», «previsión del mes»'],['✉️ Redactar','«redacta un mensaje para reactivar clientes», «recordatorio para Carlos», «promoción del 15% para el día más flojo»'],['🗓️ Periodos','«resumen de la semana», «cómo voy respecto al mes pasado», «clientes nuevos esta semana frente a la anterior», «mejor mes del año»'],['📈 Análisis','«ticket medio», «retención de clientes», «quién cancela más», «a qué hora hay más gente», «¿cuántas citas llegan online?», «si subo 2 euros el corte, ¿cuánto ganaría?»'],['🙋 Lo mío (si tienes ficha)','«cuánto llevo hoy», «mi comisión de este mes», «¿cuál es mi próxima cita?», «a quién tengo mañana»'],['🧭 Ir a','«abre stock», «llévame a gastos»']];
   return{h:'<b>Esto es lo que puedo hacer</b> (todo se calcula en tu navegador con tus datos, sin IA externa):<ul class="ai-list">'+ex.map(e=>'<li><b>'+e[0]+'</b>: '+esc(e[1])+'</li>').join('')+'</ul><p class="small muted">Entiendo fechas («ayer», «este trimestre», «del 1/10 al 15/10», «octubre»), faltas de ortografía y preguntas encadenadas como «¿y el mes pasado?».</p>',chips:['Resumen del día','Consejos para mejorar','Primer hueco libre'],ctx:{intent:'help'}}}
 
 /* ---------- router ---------- */
-const AI_EX=[['¿Cuánto he vendido hoy?','ventas'],['Resumen del día','resumen'],['¿Qué clientes debo recontactar?','clientes riesgo'],['Citas de hoy','agenda citas'],['Primer hueco libre','hueco libre'],['¿Qué debo reponer?','stock'],['Comisiones del mes','comisiones'],['Resumen de caja','caja'],['Previsión de este mes','previsión'],['Mejores clientes','mejores clientes'],['¿Qué día vendo más?','dia fuerte'],['Beneficio del mes','beneficio'],['Gastos por categoría','gastos'],['Servicios más vendidos','servicios'],['¿Cómo van los extras?','extras'],['Ranking de profesionales','ranking']];
+const AI_EX=[['¿Cuánto he vendido hoy?','ventas'],['Resumen del día','resumen'],['¿Qué clientes debo recontactar?','clientes riesgo'],['Citas de hoy','agenda citas'],['Primer hueco libre','hueco libre'],['¿Qué debo reponer?','stock'],['Comisiones del mes','comisiones'],['Resumen de caja','caja'],['Previsión de este mes','previsión'],['Mejores clientes','mejores clientes'],['¿Qué día vendo más?','dia fuerte'],['Beneficio del mes','beneficio'],['Gastos por categoría','gastos'],['Servicios más vendidos','servicios'],['¿Cómo van los extras?','extras'],['Ranking de profesionales','ranking'],['Resumen de la semana','resumen semana'],['Ticket medio','ticket medio cobro'],['Retención de clientes','retencion clientes vuelven'],['¿Quién cancela más?','cancela cancelaciones'],['¿A qué hora hay más gente?','hora gente'],['Lista de precios','precios tarifas']];
 function aiRoute(q){
   const mk=aiMk(q),{n,T,H}=mk,ctx=AIX.ctx||{};
   const ents={emp:null,svc:[],client:null,prod:null,amb:null};
@@ -1978,6 +1979,186 @@ function aiRoute(q){
   /* 5 no entendido: sugerir lo más parecido */
   const sc=AI_EX.map(([e,k])=>{const kk=k.split(' ');let s=0;T.forEach(t=>kk.forEach(w=>{if(aiTokEq(t,aiN(w))||aiLev(t,aiN(w))<=2)s++}));return{e,s}}).filter(x=>x.s).sort((a,b)=>b.s-a.s).slice(0,3);
   return{h:'No estoy seguro de haberte entendido. '+(sc.length?'¿Quizá querías preguntar alguna de estas?':'Prueba con algo como:'),chips:(sc.length?sc.map(x=>x.e):['¿Cuánto he vendido hoy?','Citas de mañana','¿Qué clientes debo recontactar?','¿Qué puedes hacer?']),ctx:ctx}}
+
+/* ---------- ampliación del asistente: semana, comparativas, ticket, retención, horas, cancelaciones, simulaciones… ---------- */
+function aiSelf(){try{const s=acc().on&&accCur&&accCur.id?employee(accCur.id):null;return s||null}catch(e){return null}}
+function aiPrevOf(P){const T=today(),to=P.to>T?T:P.to,len=aiDiff(P.from,to)+1;let B=aiCmp(P).prev;
+  if(P.to>T&&(P.kind==='month'||P.kind==='quarter'||P.kind==='week')){const e=dAdd(B.from,len-1);if(e<B.to)B=Object.assign({},B,{to:e,label:B.label+' (mismos días)'})}return B}
+function aiCurOf(kind){const T=today(),Y=+T.slice(0,4),M=+T.slice(5,7)-1;
+  if(kind==='month')return aiMonthR(Y,M,'este mes');if(kind==='quarter')return aiQuarterR(Y,Math.floor(M/3)+1,'este trimestre');
+  if(kind==='year')return{from:Y+'-01-01',to:T,label:'este año',kind:'year'};if(kind==='week'){const s=aiMon(T);return{from:s,to:dAdd(s,6),label:'esta semana',kind:'week'}}
+  return aiDay(T,'hoy')}
+const aiFirstP=n=>/\b(mi|mis|yo|llevo|he (hecho|ganado|vendido|cobrado|facturado|trabajado|atendido)|trabaje|gane|hice|me toca|me llevo)\b/.test(n);
+function aiApptsIn(P,f){return db.appointments.filter(a=>a.date>=P.from&&a.date<=P.to&&(!f||f(a)))}
+function aiNewIn(P){return db.clients.map(aiCS).filter(x=>x.first&&x.first>=P.from&&x.first<=P.to).length}
+function aiBestDay(P,f){const o={};aiSalesIn(P,s=>aiLive(s)&&(!f||f(s))).forEach(s=>o[s.date]=(o[s.date]||0)+s.total);const k=Object.keys(o).sort((a,b)=>o[b]-o[a])[0];return k?{d:k,v:o[k]}:null}
+
+function aiWeekly(P,ent){const g=aiGateSales();if(g)return{h:g};P=P||aiCurOf('week');const B=aiPrevOf(P),T=today(),cur={from:P.from,to:P.to>T?T:P.to,label:P.label};
+  const f=ent.emp?(s=>s.employeeId==ent.emp.id):null,fa=ent.emp?(a=>a.employeeId==ent.emp.id):null;
+  const a=aiStat(aiSalesIn(cur,f)),b=aiStat(aiSalesIn(B,f)),A=aiApptsIn(cur,fa),done=A.filter(x=>x.status==='completed').length,canc=A.filter(x=>x.status==='cancelled').length,nos=A.filter(x=>x.status==='noshow').length;
+  if(!a.n&&!A.length)return{h:'No hay actividad registrada en <b>'+esc(P.label)+'</b>.',chips:['Resumen del día','Ventas de este mes']};
+  let h=`<b>Resumen de ${esc(P.label)}</b>${ent.emp?' de '+esc(ent.emp.name):''}`;
+  h+=`<div class="ai-kpis"><div><small>Ventas</small><b>${money(a.total)}</b><small>${b.total?aiDelta(aiPct(a.total,b.total))+' vs '+esc(B.label.replace(/^el /,'')):'sin periodo anterior'}</small></div><div><small>Cobros</small><b>${a.n}</b><small>${b.n?'antes '+b.n:''}</small></div><div><small>Cobro medio</small><b>${money(a.avg)}</b><small>${b.avg?'antes '+money(b.avg):''}</small></div><div><small>Clientes nuevos</small><b>${aiNewIn(cur)}</b><small>antes ${aiNewIn(B)}</small></div></div>`;
+  h+=`<p>📅 <b>${A.length}</b> cita${A.length===1?'':'s'}: ${done} atendida${done===1?'':'s'}${canc?', '+canc+' cancelada'+(canc===1?'':'s'):''}${nos?', '+nos+' sin venir':''}.</p>`;
+  const L=[],bd=aiBestDay(cur,f);if(bd&&a.n>=3)L.push('📈 Mejor día: <b>'+esc(mcLong(bd.d))+'</b> ('+money(bd.v)+').');
+  const sv=aiSvcRev(a.list)[0];if(sv)L.push('✂️ Servicio estrella: <b>'+esc(sv.name)+'</b> ('+sv.n+' ×, '+money(sv.rev)+').');
+  if(!ent.emp){const es=aiEmpStats(a.list).filter(e=>e.total>0).sort((x,y)=>y.total-x.total);if(es.length>1)L.push('🏅 Quien más ha facturado: <b>'+esc(es[0].t.name)+'</b> ('+money(es[0].total)+').')}
+  const up=aiUpsellStats(cur);if(up.n>=3)L.push('➕ '+Math.round(up.rate*100)+'% de los cobros llevan extra.');
+  if(a.tips)L.push('🙌 Propinas: '+money(a.tips)+'.');
+  if(aiOk('clients')&&!ent.emp){const r=aiRiskList();if(r.length)L.push('💤 '+r.length+' cliente'+(r.length>1?'s':'')+' habitual'+(r.length>1?'es':'')+' sin venir más de lo normal.')}
+  if(b.total&&a.total<b.total*.85)L.push('⚠️ Vas un '+Math.abs(aiPct(a.total,b.total))+'% por debajo del periodo anterior: revisa los huecos y reactiva clientes.');
+  if(b.total&&a.total>b.total*1.15)L.push('🎉 Buen ritmo: un '+aiPct(a.total,b.total)+'% por encima del periodo anterior.');
+  if(L.length)h+='<ul class="ai-list">'+L.map(x=>'<li>'+x+'</li>').join('')+'</ul>';
+  return{h,chips:['Compara esta semana con la anterior','Ventas por profesional','Consejos para mejorar'],ctx:{intent:'weekly'}}}
+
+function aiCompare2(A,B,ent,metric){const g=aiGateSales();if(g&&metric!=='appts'&&metric!=='new')return{h:g};const T=today(),cl=p=>({from:p.from,to:p.to>T?T:p.to,label:p.label});
+  const aOpen=A.to>T;A=cl(A);B=cl(B);
+  if(aOpen&&aiDiff(B.from,B.to)>aiDiff(A.from,A.to)){B=Object.assign({},B,{to:dAdd(B.from,aiDiff(A.from,A.to)),label:B.label+' (mismos días)'})}
+  if(metric==='new'){const x=aiNewIn(A),y=aiNewIn(B);return{h:`<b>Clientes nuevos</b>: ${esc(A.label)} <b>${x}</b> frente a ${esc(B.label.replace(/^el /,'al '))} <b>${y}</b> ${y?aiDelta(aiPct(x,y)):''}`,chips:['Mejores clientes','Retención de clientes'],ctx:{intent:'new'}}}
+  if(metric==='appts'){const fa=ent.emp?(a=>a.employeeId==ent.emp.id):null,c=P=>{const L2=aiApptsIn(P,fa);return{n:L2.length,ok:L2.filter(a=>a.status==='completed').length,cn:L2.filter(a=>a.status==='cancelled').length,ns:L2.filter(a=>a.status==='noshow').length}},x=c(A),y=c(B);
+    return{h:'<b>Citas</b>'+(ent.emp?' de '+esc(ent.emp.name):'')+aiTable(['','Citas','Atendidas','Canceladas','No vino'],[[esc(A.label),'<b>'+x.n+'</b>',x.ok,x.cn,x.ns],[esc(B.label),y.n,y.ok,y.cn,y.ns]])+(y.n?'<p>'+aiDelta(aiPct(x.n,y.n))+' en número de citas.</p>':''),chips:['Ocupación de la semana','Resumen de la semana'],ctx:{intent:'appts'}}}
+  const r=aiCompare(A,B,ent);if(metric==='sales'&&!ent.emp){const f=s=>true,ea=aiEmpStats(aiSalesIn(A,f)),eb=aiEmpStats(aiSalesIn(B,f));if(ea.length>1){const rows=ea.map(e=>{const o=eb.find(z=>z.t.id===e.t.id);return[esc(e.t.name),money(e.total),o?money(o.total):'—',o&&o.total?aiDelta(aiPct(e.total,o.total)):'']});r.h+=aiTable(['Profesional',esc(A.label),esc(B.label),'Cambio'],rows)}}
+  return r}
+
+function aiTicket(P,ent){const g=aiGateSales();if(g)return{h:g};P=P||aiMonthR(+today().slice(0,4),+today().slice(5,7)-1,'este mes');const{cur,prev}=aiCmp(P),f=ent.emp?(s=>s.employeeId==ent.emp.id):null,a=aiStat(aiSalesIn(cur,f)),b=aiStat(aiSalesIn(prev,f));
+  if(!a.n)return{h:'No hay cobros en <b>'+esc(cur.label)+'</b> para calcular el ticket medio.'};
+  let h=`Cobro medio${ent.emp?' de <b>'+esc(ent.emp.name)+'</b>':''} en <b>${esc(cur.label)}</b>: <b>${money(a.avg)}</b> (${a.n} cobros).`+(b.n?`<br>${aiDelta(aiPct(a.avg,b.avg))} ${/^el /.test(prev.label)?'frente al ':'frente a '}${esc(prev.label.replace(/^el /,''))} (${money(b.avg)}).`:'');
+  if(!ent.emp){const es=aiEmpStats(a.list).filter(e=>e.list.length);if(es.length>1)h+='<div class="ai-sub">Por profesional</div>'+aiBars(es.map(e=>({l:e.t.name+' ('+e.list.filter(aiLive).length+')',v:e.list.filter(aiLive).length?e.total/e.list.filter(aiLive).length:0})))}
+  const up=aiUpsellStats(cur);if(up.n>=3)h+=`<p class="small muted">Los cobros con extra suben el ticket: ahora ${Math.round(up.rate*100)}% llevan uno.</p>`;
+  return{h,chips:['¿Cómo van los extras?','Ventas por profesional'],ctx:{intent:'ticket'}}}
+
+function aiRetention(){const g=aiGate('clients');if(g)return{h:g};const T=today(),all=db.clients.map(aiCS).filter(x=>x.n>0);
+  if(!all.length)return{h:'Todavía no hay clientes con compras para medir la retención.'};
+  const once=all.filter(x=>x.n===1),rep=all.filter(x=>x.n>=2),old=all.filter(x=>x.first&&daysSince(x.first)>=60),back=old.filter(x=>x.n>=2);
+  let h=`<b>Retención de clientes</b><div class="ai-kpis"><div><small>Con compras</small><b>${all.length}</b></div><div><small>Han vuelto (2+ visitas)</small><b>${rep.length}</b><small>${Math.round(rep.length/all.length*100)}%</small></div><div><small>Una sola visita</small><b>${once.length}</b><small>${Math.round(once.length/all.length*100)}%</small></div></div>`;
+  if(old.length>=3)h+=`<p>De los que llegaron hace más de 60 días, <b>${Math.round(back.length/old.length*100)}%</b> ha repetido.</p>`;
+  const gone=once.filter(x=>x.days!=null&&x.days>=30&&x.days<=120&&!x.next).sort((p,q)=>q.total-p.total).slice(0,6);
+  if(gone.length)h+='<div class="ai-sub">Vinieron una vez y no han vuelto (30–120 días)</div><ul class="ai-list">'+gone.map(x=>'<li><b>'+esc(x.c.name)+'</b> · hace '+x.days+' días · '+money(x.total)+'</li>').join('')+'</ul><p class="small muted">Un mensaje de «te echamos de menos» a estos suele dar mejores resultados que a los demás.</p>';
+  return{h,chips:['Redacta un mensaje para reactivar clientes','¿Qué clientes debo recontactar?'],ctx:{intent:'retention'}}}
+
+function aiCancels(P){const g=aiGate('agenda');if(g)return{h:g};P=P||{from:dAdd(today(),-89),to:today(),label:'los últimos 90 días',kind:'range'};const L2=aiApptsIn(P),can=L2.filter(a=>a.status==='cancelled'),nos=L2.filter(a=>a.status==='noshow');
+  if(!L2.length)return{h:'No hay citas en <b>'+esc(P.label)+'</b>.'};
+  let h=`En <b>${esc(P.label)}</b>: ${L2.length} citas, <b>${can.length}</b> cancelada${can.length===1?'':'s'} (${Math.round(can.length/L2.length*100)}%) y <b>${nos.length}</b> sin venir (${Math.round(nos.length/L2.length*100)}%).`;
+  const by=(L,keyf,namef)=>{const o={};L.forEach(a=>{const k=keyf(a);if(k!=null)o[k]=(o[k]||0)+1});return Object.entries(o).sort((x,y)=>y[1]-x[1]).slice(0,5).map(([k,v])=>({l:namef(k),v}))};
+  const bc=by(can.concat(nos),a=>a.clientId,k=>(client(+k)||client(k)||{}).name||'Cliente');if(bc.length&&bc[0].v>=2)h+='<div class="ai-sub">Clientes que más cancelan o faltan</div>'+aiBars(bc.map(x=>({l:esc(x.l),v:x.v})),v=>v);
+  const be=by(can.concat(nos),a=>a.employeeId,k=>(employee(+k)||employee(k)||{}).name||'—');if(be.length>1)h+='<div class="ai-sub">Por profesional</div>'+aiBars(be,v=>v);
+  const bd=by(can.concat(nos),a=>new Date(a.date+'T12:00').getDay(),k=>AI_DOW[+k]);if(bd.length>1&&bd[0].v>=3)h+=`<p>El día con más bajas es el <b>${bd[0].l}</b>.</p>`;
+  return{h,chips:['Clientes con faltas','Resumen de la semana'],ctx:{intent:'cancels'}}}
+
+function aiHoursDist(){const g=aiGate('agenda');if(g)return{h:g};const P={from:dAdd(today(),-89),to:today()},L2=aiApptsIn(P,a=>a.status!=='cancelled'),hr={};L2.forEach(a=>{const k=a.time.slice(0,2);hr[k]=(hr[k]||0)+1});
+  const ks=Object.keys(hr).sort();if(L2.length<5)return{h:'Aún hay pocas citas para ver en qué horas hay más gente.'};
+  const rows=ks.map(k=>({l:k+':00',v:hr[k]})),mx=ks.slice().sort((a,b)=>hr[b]-hr[a]),mn=ks.slice().sort((a,b)=>hr[a]-hr[b]);
+  return{h:`<b>Citas por hora</b> (últimos 90 días)`+aiBars(rows,v=>v)+`<p>La hora más cargada es a las <b>${mx[0]}:00</b> y la más floja a las <b>${mn[0]}:00</b>.${mn[0]!==mx[0]?' Una promoción en esa franja ayuda a repartir la agenda.':''}</p>`,chips:['¿Qué día vendo más?','Cómo llenar huecos'],ctx:{intent:'hours'}}}
+
+function aiFreeDow(){const g=aiGate('agenda');if(g)return{h:g};const T=today(),acc2={};for(let i=0;i<28;i++){const d=dAdd(T,i),st=dayStats(d);if(st.sunday)continue;const w=new Date(d+'T12:00').getDay();(acc2[w]=acc2[w]||[]).push(st.free)}
+  const rows=Object.keys(acc2).map(w=>({l:AI_DOW[w],v:Math.round(acc2[w].reduce((a,b)=>a+b,0)/acc2[w].length)}));if(!rows.length)return{h:'No hay días abiertos próximos.'};
+  const best=rows.slice().sort((a,b)=>b.v-a.v)[0];return{h:'<b>Minutos libres de media por día</b> (próximas 4 semanas)'+aiBars(rows,v=>v+' min')+`<p>El día con más huecos es el <b>${best.l}</b>.</p>`,chips:['Primer hueco libre','Cómo llenar huecos'],ctx:{intent:'free'}}}
+
+function aiOnlineShare(P){const g=aiGate('agenda');if(g)return{h:g};P=P||aiMonthR(+today().slice(0,4),+today().slice(5,7)-1,'este mes');const L2=aiApptsIn(P,a=>a.status!=='cancelled');
+  if(!L2.length)return{h:'No hay citas en <b>'+esc(P.label)+'</b>.'};const on=L2.filter(a=>a.source==='online').length;
+  return{h:`En <b>${esc(P.label)}</b>, <b>${on}</b> de ${L2.length} citas (<b>${Math.round(on/L2.length*100)}%</b>) llegaron por la web de reservas.`+(on/L2.length<.25?'<p class="small muted">Poco uso online: pon el enlace en Instagram, en Google y en el WhatsApp del negocio.</p>':''),chips:['Resumen de la semana'],ctx:{intent:'online'}}}
+
+function aiNextAppts(ent){const g=aiGate('agenda');if(g)return{h:g};const T=today(),nowT=fmtMin(nowMin());
+  const L2=db.appointments.filter(a=>(a.status==='confirmed'||a.status==='pending')&&(a.date>T||(a.date===T&&a.time>=nowT))&&(!ent.emp||a.employeeId==ent.emp.id)).sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time)).slice(0,5);
+  if(!L2.length)return{h:'No tienes más citas próximas'+(ent.emp?' ('+esc(ent.emp.name)+')':'')+'.',chips:['Primer hueco libre']};
+  const a=L2[0],c=client(a.clientId);return{h:`Lo siguiente: <b>${mcLong(a.date)} a las ${a.time}</b> · ${esc(c?c.name:'Cliente')} · ${esc(service(a.serviceId)?.name||'')}.`+(L2.length>1?aiTable(['Cuándo','Cliente','Servicio'],L2.slice(1).map(x=>[(x.date===T?'hoy':fmtDate(x.date).slice(0,5))+' '+x.time,esc((client(x.clientId)||{}).name||'Cliente'),esc(service(x.serviceId)?.name||'')])):''),chips:['Citas de mañana','¿Cómo tengo la semana?'],ctx:{intent:'appts'}}}
+
+function aiHoursWorked(P,ent){const g=aiGate('agenda');if(g)return{h:g};P=P||aiDay(today(),'hoy');const L2=aiApptsIn(P,a=>a.status==='completed'&&(!ent.emp||a.employeeId==ent.emp.id));
+  if(!L2.length)return{h:'No hay citas atendidas'+(ent.emp?' de <b>'+esc(ent.emp.name)+'</b>':'')+' en <b>'+esc(P.label)+'</b>.'};
+  const by={};L2.forEach(a=>{by[a.employeeId]=(by[a.employeeId]||0)+apptDur(a)});const rows=Object.entries(by).map(([k,v])=>({l:(employee(+k)||employee(k)||{}).name||'—',v:Math.round(v/6)/10}));
+  const tot=Object.values(by).reduce((a,b)=>a+b,0);return{h:`Tiempo con clientes en <b>${esc(P.label)}</b>: <b>${Math.floor(tot/60)} h ${tot%60} min</b> (${L2.length} citas atendidas).`+(rows.length>1?aiBars(rows,v=>v+' h'):''),chips:['Ocupación de la semana'],ctx:{intent:'hours'}}}
+
+function aiMyComm(P,me){P=P||aiMonthR(+today().slice(0,4),+today().slice(5,7)-1,'este mes');if(!commOn(me))return{h:'Tu ficha no tiene comisión configurada (te quedas con lo que cobras).'};
+  const S=aiSalesIn(P,s=>s.employeeId==me.id),c=commOfSales(S);if(!S.length)return{h:'No tienes ventas en <b>'+esc(P.label)+'</b>, así que todavía no hay comisión.'};
+  return{h:`Tu comisión de <b>${esc(P.label)}</b>: <b>${money(c.comm)}</b> sobre ${money(c.base)} cobrados sin IVA (${S.filter(aiLive).length} cobros).`,chips:['¿Cuánto llevo este mes?','Mis citas de esta semana'],ctx:{intent:'comm'}}}
+function aiAbsent(n){const g=aiGate('clients');if(g)return{h:g};const m=n.match(/(\d+)\s*(dias?|semanas?|meses|mes)/),k=m?+m[1]*(m[2][0]==='d'?1:m[2][0]==='s'?7:30):(/\bmes\b/.test(n)?30:db.settings.retentionDays||45);
+  const L2=db.clients.map(aiCS).filter(x=>x.n>0&&x.days!=null&&x.days>=k&&!x.next).sort((a,b)=>b.total-a.total);
+  if(!L2.length)return{h:'No hay clientes con compras que lleven más de <b>'+k+' días</b> sin venir y sin cita.'};
+  return{h:`<b>${L2.length}</b> cliente${L2.length===1?'':'s'} con compras llevan más de <b>${k} días</b> sin venir y sin cita próxima:`+aiTable(['Cliente','Última visita','Visitas','Gastado'],L2.slice(0,10).map(x=>[esc(x.c.name),'hace '+x.days+' días',x.n,money(x.total)]))+(L2.length>10?'<div class="small muted">… y '+(L2.length-10)+' más.</div>':''),chips:['Redacta un mensaje para reactivar clientes','Retención de clientes'],ctx:{intent:'risk'}}}
+function aiOwed(){const g=aiGate('agenda');if(g)return{h:g};const T=today(),nowT=fmtMin(nowMin()),L2=db.appointments.filter(a=>(a.status==='confirmed')&&!a.paid&&(a.date<T||(a.date===T&&a.time<nowT))).sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time));
+  if(!L2.length)return{h:'No tienes citas pasadas sin cobrar ni cerrar 👌'};const val=L2.reduce((s,a)=>{const sv=service(a.serviceId);return s+(sv?sv.price:0)},0);
+  return{h:`Hay <b>${L2.length}</b> cita${L2.length===1?'':'s'} pasada${L2.length===1?'':'s'} sin cobrar ni cerrar (≈ <b>${money(val)}</b>).`+aiTable(['Fecha','Cliente','Servicio'],L2.slice(0,10).map(a=>[fmtDate(a.date).slice(0,5)+' '+a.time,esc((client(a.clientId)||{}).name||'Cliente'),esc(service(a.serviceId)?.name||'')])),chips:['Citas de hoy pendientes de cobro'],btn:aiGoBtn('agenda','Abrir Agenda'),ctx:{intent:'appts'}}}
+
+function aiMonthsView(){const g=aiGateSales();if(g)return{h:g};const T=today(),Y=+T.slice(0,4),rows=[];for(let i=11;i>=0;i--){const d=new Date(Y,+T.slice(5,7)-1-i,1),m=aiMonthR(d.getFullYear(),d.getMonth());rows.push({l:AI_MONTHS[d.getMonth()].slice(0,3)+' '+String(d.getFullYear()).slice(2),v:aiStat(aiSalesIn(m)).total})}
+  const live=rows.filter(r=>r.v>0);if(live.length<2)return{h:'Aún no hay meses suficientes con ventas para comparar.'};const done=live.slice(0,live.length-(rows[rows.length-1].v>0?1:0));const b=(done.length?done:live).slice().sort((x,y)=>y.v-x.v);
+  return{h:'<b>Ventas por mes</b> (últimos 12)'+aiBars(rows,v=>money(v))+`<p>Mejor mes: <b>${esc(b[0].l)}</b> (${money(b[0].v)}). Mes más flojo: <b>${esc(b[b.length-1].l)}</b> (${money(b[b.length-1].v)}).</p>`,chips:['Previsión de este mes','Compara este mes con el anterior'],ctx:{intent:'months'}}}
+
+function aiWhatIf(n,ent){const g=aiGateSales();if(g)return{h:g};const sv=ent.svc&&ent.svc.length&&ent.svc.length<db.services.length?ent.svc:db.services.filter(s=>s.active&&/corte/.test(aiN(s.name))).slice(0,1);
+  const m=n.match(/(\d+(?:[.,]\d+)?)\s*(%|por ?ciento|euros?|€)?/);if(!sv.length||!m)return{h:'Dime el servicio y el cambio, por ejemplo: «si subo 2 euros el corte clásico» o «si bajo un 10% la barba».'};
+  const val=+m[1].replace(',','.'),pct=/%|por ?ciento/.test(m[0]),down=/\b(bajo|rebajo|reduzco|quito)\b/.test(n),T=today(),P={from:dAdd(T,-29),to:T},ids=new Set(sv.map(x=>x.id));
+  let cnt=0,rev=0;aiSalesIn(P,aiLive).forEach(s=>(s.items||[]).forEach(i=>{if(ids.has(i.serviceId)){cnt+=i.qty||1;rev+=(i.price||0)*(i.qty||1)}}));
+  if(!cnt)return{h:'No hay ventas de <b>'+esc(aiJ(sv.map(x=>x.name)))+'</b> en los últimos 30 días para estimar.'};
+  const avg=rev/cnt,delta=(pct?avg*val/100:val)*(down?-1:1),extra=delta*cnt;
+  const lose=extra>0?Math.max(0,Math.ceil(cnt*(1-(rev/(rev+extra))))) :0;
+  let h=`<b>Simulación</b> para <b>${esc(aiJ(sv.map(x=>x.name)))}</b>: en los últimos 30 días hiciste <b>${cnt}</b> (≈ ${money(avg)} de media, ${money(rev)} en total).<br>${down?'Bajar':'Subir'} ${pct?val+'%':money(val)} por servicio, con la <b>misma</b> demanda: <b>${extra>=0?'+':''}${money(extra)}</b> al mes.`;
+  if(!down)h+=`<br>Aun así saldría a cuenta mientras no pierdas más de <b>${lose}</b> de esos ${cnt} servicios (${Math.round(lose/cnt*100)}%).`;else h+=`<br>Para compensar la rebaja necesitarías unos <b>${Math.ceil(cnt*rev/(rev+extra))-cnt}</b> servicios más al mes.`;
+  return{h:h+'<p class="small muted">Es una estimación sobre tus datos: no sabe cómo reaccionarán tus clientes.</p>',chips:['Servicios más vendidos'],ctx:{intent:'whatif'}}}
+
+function aiPrices(n,ent){const A=db.services.filter(s=>s.active);if(!A.length)return{h:'No hay servicios activos.'};
+  if(ent.svc&&ent.svc.length&&ent.svc.length<db.services.length)return{h:ent.svc.map(s=>`<b>${esc(s.name)}</b>: ${money(s.price)} · ${s.duration} min`).join('<br>'),chips:['Lista de precios']};
+  const ord=A.slice().sort((a,b)=>a.price-b.price);if(/\bbarat/.test(n))return{h:`El servicio más barato es <b>${esc(ord[0].name)}</b> (${money(ord[0].price)}).`};if(/\bcar[oa]/.test(n))return{h:`El más caro es <b>${esc(ord[ord.length-1].name)}</b> (${money(ord[ord.length-1].price)}).`};
+  return{h:'<b>Tarifas</b>'+aiTable(['Servicio','Precio','Duración'],ord.map(s=>[esc(s.name),money(s.price),s.duration+' min'])),chips:['Servicios más vendidos']}}
+
+function aiRoute2(q){
+  const mk=aiMk(q),{n,T,H}=mk,ctx=AIX.ctx||{};
+  const ents={emp:null,svc:[],client:null};
+  const emp=aiEnt(db.team,t=>t.name,T);if(emp.length&&emp[0].score>=.5)ents.emp=emp[0].it;
+  const se=aiEnt(db.services,s=>s.name,T);if(se.length){const mx=se[0].score;ents.svc=se.filter(e=>e.score>=mx-.001).map(e=>e.it)}
+  const me=aiSelf(),first=aiFirstP(n);if(!ents.emp&&me&&first)ents.emp=me;
+  const P=aiParsePeriod(n,/\b(proxim|manana|tengo|viene|vienen|cita)/.test(n)?'future':'past'),done=(o,intent)=>{o.ctx=Object.assign({intent,P:P||null,emp:ents.emp?ents.emp.id:null},o.ctx||{});return o};
+  const sales=H('venta','ventas','vendido','factur','ingres','cobr','gane','ganado','llevo');
+  /* simulaciones */
+  if(/\bsi (subo|bajo|aumento|rebajo|reduzco|cobro|pongo|quito)\b/.test(n)&&/\d/.test(n))return done(aiWhatIf(n,ents),'whatif');
+  /* resumen de periodo (semana/mes/año) */
+  if(H('resumen','como ha ido','como fue','que tal','balance','informe','repaso','como me ha ido','como va','como voy')&&P&&(P.kind==='week'||/\bsemana\b/.test(n))&&!H('compar','respecto','frente','vs'))return done(aiWeekly(P.kind==='week'?P:aiCurOf('week'),ents),'weekly');
+  if(/^(resumen|balance|informe|repaso)( de)?( la| esta)? semana\b/.test(n)||/\bcomo (ha ido|fue|va) (la|esta) semana\b/.test(n))return done(aiWeekly(aiParsePeriod(n)||aiCurOf('week'),ents),'weekly');
+  /* comparativas con huecos en la frase */
+  if(H('compar','comparado','comparada','respecto','frente','versus','vs','mejor que','peor que','que el','que la')&&(H('mes pasado','mes anterior','semana pasada','semana anterior','ano pasado','ano anterior','trimestre pasado','anterior','pasado')||/\b(vs|frente a|respecto a|comparad[oa] con|que) /.test(n))){
+    const parts=n.split(/\b(?:con|frente a|respecto a|respecto de|versus|vs|contra|comparado con|comparada con|que)\b/);let A=null,B=null;
+    if(parts.length>1){A=aiParsePeriod(parts[0],'past');B=aiParsePeriod(parts.slice(1).join(' '),'past')}
+    if(!A&&!B)B=aiParsePeriod(n,'past');
+    if(B&&!A){A=aiCurOf(B.kind==='range'?'month':B.kind)}
+    if(A&&!B&&/\banterior\b/.test(n))B=aiPrevOf(A);
+    if(A&&B&&(A.from!==B.from)){const metric=H('cliente','nuevos')&&H('nuevos','nuevo')?'new':H('cita','citas','reserva','reservas')&&!sales?'appts':'sales';return done(aiCompare2(A,B,ents,metric),'sales')}}
+  if(H('mejor mes','peor mes','mes mas fuerte','mes mas flojo','ventas por mes','mes a mes','cada mes'))return done(aiMonthsView(),'months');
+  if(H('ticket medio','cobro medio','gasto medio','importe medio','media por cliente','cuanto gasta de media','venta media','factura media'))return done(aiTicket(P,ents),'ticket');
+  if(H('retencion','han vuelto','vuelven','repiten','repetidores','fidelidad','una sola vez','solo una vez','una vez','volvieron')&&H('cliente','clientes','han','vuelven','repiten','retencion','fidelidad'))return done(aiRetention(),'retention');
+  if(H('cumpleanos','cumple','cumplen')&&H('cliente','clientes','anos','cumpleanos'))return{h:'Aún no guardas la <b>fecha de nacimiento</b> de tus clientes, así que no puedo avisarte de cumpleaños. Si te interesa, se puede añadir ese campo a la ficha y el asistente te avisaría cada semana.',chips:['Mejores clientes']};
+  if(H('cancela','cancelan','cancelaciones','cancelados')&&!/\bcita de\b/.test(n)&&!ents.client&&!/\bcancela (la|mi|el)\b/.test(n)&&!/^cancela\b/.test(n))return done(aiCancels(P),'cancels');
+  if(H('hora','horas','franja')&&H('mas gente','mas movimiento','mas citas','mas cargad','mas llena','mas ocupad','mas libre','mas vacia','mas flojo','mas floja','punta','cuando hay mas','mas tranquil')&&!H('dia','dias'))return done(aiHoursDist(),'hours');
+  if(H('huecos','libre','libres','tranquilo')&&H('dia de la semana','que dia','dias de la semana','cada dia'))return done(aiFreeDow(),'free');
+  if(H('online','web','internet','reservas online')&&H('cita','citas','reserva','reservas','porcentaje'))return done(aiOnlineShare(P),'online');
+  if(/\b(proxima cita|siguiente cita|proximo cliente|siguiente cliente|a quien tengo|quien viene|quienes vienen|que tengo)\b/.test(n)&&!ents.client&&!P)return done(aiNextAppts(ents),'appts');
+  if(/\b(a quien tengo|quien viene|quienes vienen|que tengo)\b/.test(n)&&P&&!ents.client)return done(aiAppts(P,ents),'appts');
+  if(H('horas')&&H('trabaj','trabaje','trabajado','atendido','con clientes','ocupado'))return done(aiHoursWorked(P,ents),'hours');
+  if(/\b(no (viene|vienen|vino|ha venido|han venido|aparece|aparecen|vuelve|vuelven)|sin venir|llevan sin venir|ausentes?)\b/.test(n)&&H('cliente','clientes','quien','quienes','que')&&!ents.client)return done(aiAbsent(n),'risk');
+  if(/\bhace (mas de )?\d+ (dias?|semanas?|meses)\b/.test(n)&&H('cliente','clientes','quien','quienes','que')&&!H('venta','ventas','cobr'))return done(aiAbsent(n),'risk');
+  if(H('deben','me deben'))return done(aiOwed(),'appts');
+  if(H('precio','precios','tarifa','tarifas','cuanto cuesta','cuanto dura','duracion','mas barato','mas caro','lista de precios','cuanto tiempo dura'))return done(aiPrices(n,ents),'prices');
+  /* en primera persona: «lo mío» */
+  if(ents.emp&&me&&ents.emp.id===me.id&&first){
+    if(H('comision','comisiones','me toca','me llevo'))return done(aiMyComm(P,me),'comm');
+    if(sales||H('llevo','he hecho','cortes','servicios'))return done(aiSales(P||aiDay(today(),'hoy'),ents),'sales');
+    if(H('cita','citas','agenda','tengo'))return done(aiAppts(P,ents),'appts')}
+  return null}
+{const _rt=aiRoute;aiRoute=function(q){try{const r=aiRoute2(q);if(r)return r}catch(e){console.error('aiRoute2',e)}return _rt(q)}}
+
+/* más detecciones y consejos por reglas */
+function aiExtraIns(){const out=[],T=today(),add=(lvl,ic,t,q)=>out.push({lvl,ic,t,q});
+  try{
+  if(!aiGateSales()&&mod('tpv')){
+    const c={from:dAdd(T,-29),to:T},p={from:dAdd(T,-59),to:dAdd(T,-30)},A=aiSvcRev(aiSalesIn(c,aiLive)),B=aiSvcRev(aiSalesIn(p,aiLive));
+    B.forEach(b=>{const a=A.find(x=>x.name===b.name);const an=a?a.n:0;if(b.n>=5&&an<=b.n*.7)add('warn','📉','«'+esc(b.name)+'» baja: '+an+' servicios en 30 días frente a '+b.n+' en los 30 anteriores.','Ventas de '+b.name+' los últimos 30 días')});
+  }
+  if(aiOk('agenda')){
+    const rows=[];for(let i=1;i<=7;i++){const d=dAdd(T,i),st=dayStats(d);if(!st.sunday)rows.push({d,st})}
+    if(rows.length>=3){const w=rows.slice().sort((a,b)=>a.st.occ-b.st.occ)[0];if(w.st.occ<=35&&w.st.free>=180)add('info','🗓️','El '+esc(mcLong(w.d))+' lo tienes casi vacío ('+w.st.occ+'% de ocupación): buen día para una promoción o avisar a la lista de espera.','Redacta una promoción para el día más flojo')}
+    const L2=db.appointments.filter(a=>a.date>=dAdd(T,-29)&&a.date<=T&&a.status!=='cancelled');if(L2.length>=20){const on=L2.filter(a=>a.source==='online').length/L2.length;if(on<.15&&db.settings.selfService&&db.settings.selfService.on!==false)add('info','🌐','Solo '+Math.round(on*100)+'% de tus citas llegan por la web. Pon el enlace de reservas en Instagram y en tu ficha de Google.','Porcentaje de citas online')}
+  }
+  if(aiOk('clients')){const once=db.clients.map(aiCS).filter(x=>x.n===1&&x.days!=null&&x.days>=30&&x.days<=90&&!x.next);if(once.length>=3)add('info','🔁',once.length+' clientes vinieron una sola vez hace 30–90 días y no han vuelto: un mensaje a tiempo puede recuperarlos.','Retención de clientes')}
+  }catch(e){}
+  return out}
+{const _ai=aiInsights;aiInsights=function(){const o=_ai().concat(aiExtraIns()),r={warn:0,good:1,info:2};return o.sort((a,b)=>r[a.lvl]-r[b.lvl])}}
 
 /* ---------- interfaz ---------- */
 function aiSay(h,chips,btn){AIX.hist.push({r:'ai',h:h+(btn?'<div class="ai-btns">'+btn+'</div>':''),chips:chips||[]});aiRender()}
