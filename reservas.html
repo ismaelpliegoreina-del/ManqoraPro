@@ -187,8 +187,7 @@ function render(){
      +'<label class="f" for="phone">Teléfono móvil</label><input type="tel" id="phone" autocomplete="tel" inputmode="tel" maxlength="20" value="'+esc(S.phone)+'">'
      +'<label class="f" for="email">Email (te enviaremos la confirmación)</label><input type="email" id="email" autocomplete="email" maxlength="120" value="'+esc(S.email)+'">'
      +'<input class="hp" type="text" id="website" tabindex="-1" autocomplete="off" aria-hidden="true">'
-     +'<label class="check"><input type="checkbox" id="priv"'+(S.priv?' checked':'')+'><span>He leído y acepto la <a href="admin.html#legal=priv" target="_blank" rel="noopener">política de privacidad</a>. *</span></label>'
-     +'<label class="check"><input type="checkbox" id="mkt"'+(S.mkt?' checked':'')+'><span>Quiero recibir promociones y novedades (opcional).</span></label>';
+     +'<label class="check"><input type="checkbox" id="priv"'+(S.priv?' checked':'')+'><span>He leído y acepto la <a href="admin.html#legal=priv" target="_blank" rel="noopener">política de privacidad</a>. *</span></label>';
     if(S.msg)c+='<div class="msg err" role="alert">'+esc(S.msg)+'</div>';
     c+='<button class="btn" id="go"'+(S.busy?' disabled':'')+'>'+(S.busy?'Reservando…':'Confirmar reserva')+'</button>';
     c+='<p class="muted" style="margin-top:10px">Puedes cancelar o cambiar tu cita online hasta '+esc(b.cancel_min_hours)+' horas antes.</p>';
@@ -229,7 +228,6 @@ app.addEventListener('change',async e=>{
   if(t.dataset&&t.dataset.up){const id=t.dataset.up,i=S.addons.indexOf(id);if(t.checked&&i<0)S.addons.push(id);if(!t.checked&&i>=0)S.addons.splice(i,1);await loadSlots()}
   else if(t.id==='day'){S.go=true;S.day=t.value;await loadSlots()}
   else if(t.id==='priv'){S.priv=t.checked;if(S.msg===ERR.consent_required){S.msg='';render()}}
-  else if(t.id==='mkt'){S.mkt=t.checked}
 });
 app.addEventListener('input',e=>{const t=e.target;if(t.id==='name')S.name=t.value;if(t.id==='phone')S.phone=t.value;if(t.id==='email')S.email=t.value});
 
