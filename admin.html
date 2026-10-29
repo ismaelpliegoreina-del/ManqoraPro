@@ -2135,6 +2135,45 @@ accLock=function(){};                   /* no hay pantalla de PIN: el control de
 isLogged=function(){return !!CL.ses};
 
 /* ---------- emails: se encolan en la base de datos ---------- */
+/* ===== Accesos del equipo (nube): el propietario da acceso con contraseña inicial; en el primer acceso se obliga a cambiarla ===== */
+CL.access={};
+const ACC_ERR={not_owner:'Solo el propietario puede gestionar accesos.',no_session:'Tu sesión ha caducado. Vuelve a entrar.',invalid_email:'El email no es válido.',weak_password:'La contraseña debe tener al menos 8 caracteres.',invalid_employee:'Este profesional aún no se ha sincronizado. Espera unos segundos e inténtalo de nuevo.',already_has_access:'Este profesional ya tiene acceso.',email_in_use:'Ese email ya tiene una cuenta. Usa otro.',create_failed:'No se pudo crear la cuenta. Inténtalo de nuevo.',no_access:'Este profesional no tiene acceso.',is_owner:'No se puede cambiar el acceso de un propietario.',reset_failed:'No se pudo cambiar la contraseña.',server_error:'Error del servidor. Inténtalo de nuevo.'};
+async function accCall(body){try{const{data,error}=await CL.sb.functions.invoke('team-access',{body:Object.assign({tenant_id:CL.tid},body)});if(error)return{ok:false,msg:'No se pudo conectar. Inténtalo de nuevo.'};if(!data||!data.ok)return{ok:false,msg:ACC_ERR[(data||{}).error]||'No se pudo completar la acción.'};return{ok:true,data}}catch(e){return{ok:false,msg:'No se pudo conectar. Inténtalo de nuevo.'}}}
+async function accLoad(){if(CL.role!=='owner')return;const r=await accCall({action:'list'});if(!r.ok)return;CL.access={};(r.data.members||[]).forEach(m=>{if(m.employee_app_id!=null)CL.access[m.employee_app_id]=m});if(currentView==='team')renderTeam()}
+function genPass(){const a='abcdefghjkmnpqrstuvwxyz',b='ABCDEFGHJKMNPQRSTUVWXYZ',c='23456789',all=a+b+c,r=new Uint32Array(10);crypto.getRandomValues(r);let p=a[r[0]%a.length]+b[r[1]%b.length]+c[r[2]%c.length];for(let i=3;i<10;i++)p+=all[r[i]%all.length];return p}
+{const _rt=renderTeam;renderTeam=function(){_rt();if(CL.role!=='owner')return;
+  document.querySelectorAll('#team .grid > .card').forEach(card=>{const b=card.querySelector('button[onclick^="editTeam("]');if(!b)return;const id=+(b.getAttribute('onclick').match(/\d+/)||[])[0],m=CL.access[id];
+    const html=m?`<div class="notice" style="margin-top:12px"><b>🔑 Acceso:</b> ${esc(m.email)} · ${m.role==='manager'?'Encargado':'Empleado'}${m.must_change?'<div class="small" style="margin-top:2px">Aún no ha entrado: tendrá que cambiar la contraseña inicial.</div>':''}<div class="actions" style="margin-top:8px"><button class="btn" onclick="accessReset(${id})">Restablecer contraseña</button><button class="btn danger" onclick="accessRevoke(${id})">Quitar acceso</button></div></div>`:`<div class="actions" style="margin-top:10px"><button class="btn blue" onclick="accessNew(${id})">🔑 Dar acceso</button></div>`;
+    card.insertAdjacentHTML('beforeend',html)})}}
+function accessNew(id){const t=employee(id);if(!t)return;const pw=genPass();openModal(`<h2>Dar acceso a ${esc(t.name)}</h2><p class="muted">Con este email y esta contraseña inicial entrará en el panel desde su móvil. La primera vez tendrá que elegir su propia contraseña.</p><div class="form"><div><label>Email de ${esc(t.name)}</label><input id="axEmail" type="email" inputmode="email" autocomplete="off" placeholder="peluquero@correo.com"></div><div><label>Contraseña inicial</label><div style="display:flex;gap:8px"><input id="axPass" type="text" autocomplete="off" value="${pw}" style="flex:1"><button class="btn" type="button" onclick="document.getElementById('axPass').value=genPass()">Generar otra</button></div></div><div><label>Qué puede hacer</label><select id="axRole"><option value="staff">Empleado: agenda, cobros y clientes</option><option value="manager">Encargado: además dashboard, servicios, stock y gastos</option></select></div></div><div id="axMsg" class="small" style="color:#b91c1c;min-height:18px;margin-top:6px"></div><div class="actions" style="margin-top:10px"><button class="btn" onclick="closeModal()">Cancelar</button><button class="btn green" id="axGo" onclick="accessNewGo(${id})">Crear acceso</button></div>`)}
+async function accessNewGo(id){const g=k=>document.getElementById(k).value,m=document.getElementById('axMsg'),btn=document.getElementById('axGo'),email=g('axEmail').trim(),pass=g('axPass');
+  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){m.textContent=ACC_ERR.invalid_email;return}if(pass.length<8){m.textContent=ACC_ERR.weak_password;return}
+  btn.disabled=true;btn.textContent='Creando…';const r=await accCall({action:'create',employee_app_id:id,email,password:pass,role:g('axRole')});
+  if(!r.ok){m.textContent=r.msg;btn.disabled=false;btn.textContent='Crear acceso';return}
+  const t=employee(id);await accLoad();accessShow(t?t.name:'',email,pass)}
+function accessShow(name,email,pass){openModal(`<h2>Acceso creado</h2><p class="muted">Pásale estos datos a ${esc(name)}. La contraseña no se vuelve a mostrar.</p><div class="notice" style="font-size:15px;line-height:1.7"><b>Panel:</b> ${esc(location.origin)}/admin<br><b>Email:</b> ${esc(email)}<br><b>Contraseña inicial:</b> <span style="font-family:ui-monospace,Menlo,monospace">${esc(pass)}</span></div><div class="actions" style="margin-top:12px"><button class="btn blue" onclick="accessCopy(this)" data-t="${esc('Panel: '+location.origin+'/admin\nEmail: '+email+'\nContraseña inicial: '+pass+'\n(La primera vez tendrás que elegir tu propia contraseña.)')}">Copiar datos</button><button class="btn green" onclick="closeModal()">Hecho</button></div>`)}
+function accessCopy(b){const t=b.dataset.t;(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>toast('Datos copiados')).catch(()=>toast('No se pudo copiar; cópialos a mano'))}
+function accessReset(id){const t=employee(id);if(!t)return;openModal(`<h2>Restablecer contraseña de ${esc(t.name)}</h2><p class="muted">Se le pone una contraseña temporal y, al entrar, tendrá que elegir una nueva.</p><div class="form"><div><label>Contraseña temporal</label><div style="display:flex;gap:8px"><input id="axPass" type="text" autocomplete="off" value="${genPass()}" style="flex:1"><button class="btn" type="button" onclick="document.getElementById('axPass').value=genPass()">Generar otra</button></div></div></div><div id="axMsg" class="small" style="color:#b91c1c;min-height:18px;margin-top:6px"></div><div class="actions" style="margin-top:10px"><button class="btn" onclick="closeModal()">Cancelar</button><button class="btn green" id="axGo" onclick="accessResetGo(${id})">Restablecer</button></div>`)}
+async function accessResetGo(id){const pass=document.getElementById('axPass').value,m=document.getElementById('axMsg'),btn=document.getElementById('axGo');if(pass.length<8){m.textContent=ACC_ERR.weak_password;return}
+  btn.disabled=true;btn.textContent='Guardando…';const r=await accCall({action:'reset',employee_app_id:id,password:pass});
+  if(!r.ok){m.textContent=r.msg;btn.disabled=false;btn.textContent='Restablecer';return}
+  const t=employee(id),a=CL.access[id];await accLoad();accessShow(t?t.name:'',a?a.email:'',pass)}
+function accessRevoke(id){const t=employee(id);if(!t)return;openModal(`<h2>Quitar acceso a ${esc(t.name)}</h2><p class="muted">Dejará de poder entrar al panel. Su ficha, su agenda y sus datos se mantienen. Podrás darle acceso otra vez cuando quieras.</p><div id="axMsg" class="small" style="color:#b91c1c;min-height:18px"></div><div class="actions" style="margin-top:10px"><button class="btn" onclick="closeModal()">Cancelar</button><button class="btn danger" id="axGo" onclick="accessRevokeGo(${id})">Quitar acceso</button></div>`)}
+async function accessRevokeGo(id){const btn=document.getElementById('axGo');btn.disabled=true;const r=await accCall({action:'revoke',employee_app_id:id});if(!r.ok){document.getElementById('axMsg').textContent=r.msg;btn.disabled=false;return}
+  delete CL.access[id];closeModal();renderTeam();toast('Acceso quitado')}
+
+/* Cambio de contraseña: obligatorio en el primer acceso, voluntario desde el nombre de la barra superior */
+function pwdOverlay(force){let o=document.getElementById('pwdOv');if(o)o.remove();o=document.createElement('div');o.id='pwdOv';o.style.cssText='position:fixed;inset:0;z-index:100000;background:rgba(15,23,42,.78);display:grid;place-items:center;padding:16px';
+  o.innerHTML=`<div class="modal-card" style="max-width:420px;width:100%"><h2>${force?'Elige tu contraseña':'Cambiar mi contraseña'}</h2><p class="muted">${force?'Es tu primer acceso. Elige una contraseña propia (mínimo 8 caracteres): será la que uses a partir de ahora.':'Escribe tu nueva contraseña (mínimo 8 caracteres).'}</p><div class="form"><div><label>Nueva contraseña</label><input id="pwA" type="password" autocomplete="new-password"></div><div><label>Repite la contraseña</label><input id="pwB" type="password" autocomplete="new-password"></div></div><div id="pwMsg" class="small" style="color:#b91c1c;min-height:18px;margin-top:6px"></div><div class="actions" style="margin-top:10px">${force?'':'<button class="btn" onclick="document.getElementById(\'pwdOv\').remove()">Cancelar</button>'}<button class="btn green" id="pwGo" onclick="pwdSave(${force?'true':'false'})">Guardar contraseña</button></div></div>`;document.body.appendChild(o);setTimeout(()=>{const i=document.getElementById('pwA');if(i)i.focus()},50)}
+async function pwdSave(force){const a=document.getElementById('pwA').value,b=document.getElementById('pwB').value,m=document.getElementById('pwMsg'),btn=document.getElementById('pwGo');
+  if(a.length<8){m.textContent='La contraseña debe tener al menos 8 caracteres.';return}if(a!==b){m.textContent='Las dos contraseñas no coinciden.';return}
+  btn.disabled=true;btn.textContent='Guardando…';
+  try{const{error}=await CL.sb.auth.updateUser({password:a,data:{must_change_password:false}});if(error){m.textContent=/same|different/i.test(error.message)?'Elige una contraseña distinta de la actual.':(/weak|short|least/i.test(error.message)?'La contraseña es demasiado débil. Prueba con otra.':'No se pudo guardar. Inténtalo de nuevo.');btn.disabled=false;btn.textContent='Guardar contraseña';return}
+    document.getElementById('pwdOv').remove();toast('Contraseña guardada')}catch(e){m.textContent='No se pudo conectar. Inténtalo de nuevo.';btn.disabled=false;btn.textContent='Guardar contraseña'}}
+
+/* Las funciones async de un bloque no son globales: se exponen para los onclick */
+window.pwdSave=pwdSave;window.accessNewGo=accessNewGo;window.accessResetGo=accessResetGo;window.accessRevokeGo=accessRevokeGo;
+
 /* Correos enviados (nube): lista real desde la base de datos, no la simulación local */
 outboxOpen=async function(){
   const T={confirm:'Confirmación',pending:'Reserva pendiente',change:'Cambio',cancel:'Cancelación',reminder:'Recordatorio'},ST={sent:['Enviado','ok'],pending:['En cola','pending'],error:['No enviado','danger-b']};
@@ -2190,7 +2229,9 @@ async function start(ses){
     currentView=canView(currentView)?currentView:firstView();
     prepUi();renderAll();showViewDom(currentView);accPillUpdate();bizTop();
     clearInterval(CL.poll);CL.poll=setInterval(pollTick,20000);
-    toast('Sesión iniciada')
+    toast('Sesión iniciada');
+    if(ses.user.user_metadata&&ses.user.user_metadata.must_change_password)pwdOverlay(true);
+    accLoad()
   }catch(e){console.error(e);lmsg('No se pudieron cargar los datos: '+((e&&e.message)||'error'))}
   finally{if(b){b.disabled=false;b.textContent='Entrar al panel'}}}
 const safeImg=p=>/^(assets\/[a-z0-9_-]+\/[A-Za-z0-9._-]+|https:\/\/[^\s"'<>()]+)$/i.test(String(p||''))?String(p):'';
@@ -2203,7 +2244,7 @@ function prepUi(){
   if(ta&&!document.getElementById('cloudPill'))ta.insertAdjacentHTML('afterbegin','<span class="pill" id="cloudPill" title="Estado de la sincronización">☁ Sincronizado</span>');
   document.querySelectorAll('.top-actions button').forEach(b=>{if(/showPublic/.test(b.getAttribute('onclick')||''))b.textContent='Ver reservas online ↗'});
   ['accLockBtn'].forEach(i=>{const e=document.getElementById(i);if(e)e.remove()});document.querySelectorAll('.top-actions button').forEach(b=>{if(/reset|Reiniciar/i.test((b.getAttribute('onclick')||'')+b.textContent))b.remove()});
-  const ap=document.getElementById('accPill');if(ap){ap.onclick=null;ap.title=''}
+  const ap=document.getElementById('accPill');if(ap){ap.onclick=()=>pwdOverlay(false);ap.title='Cambiar mi contraseña'}
   const vp=document.getElementById('verPill');if(vp)vp.textContent='● '+VERSION+' · nube'}
 
 /* ---------- arranque ---------- */
