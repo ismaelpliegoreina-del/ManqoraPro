@@ -117,7 +117,7 @@ function brand(b){const bz=b.business||{},logo=safeImg(bz.logo),hero=safeImg(bz.
   if(logo){const l=document.getElementById('lp');l.innerHTML='<img alt="'+esc(b.name)+'" src="'+esc(logo)+'">';l.hidden=false}
   if(bz.address){const m=document.getElementById('maps');m.href='https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(bz.address);m.hidden=false}
   if(ph.length||bz.address){const s=document.getElementById('local');
-    s.innerHTML='<div class="card"><div class="local"><h2>Nuestro local</h2>'+(ph.length?'<div class="gal">'+ph.map(u=>'<img loading="lazy" alt="Interior de '+esc(b.name)+'" src="'+esc(u)+'">').join('')+'</div>':'')+(bz.address?'<p class="muted" style="margin:12px 0 0">📍 '+esc(bz.address)+(bz.phone?' · 📞 '+esc(bz.phone):'')+'</p>':'')+'</div></div>';s.hidden=false}}
+    s.innerHTML='<div class="card"><div class="local"><h2>'+esc(bz.photosTitle||'Nuestro local')+'</h2>'+(ph.length?'<div class="gal">'+ph.map(u=>'<img loading="lazy" alt="'+esc(bz.photosTitle||'Interior de '+b.name)+'" src="'+esc(u)+'">').join('')+'</div>':'')+(bz.address?'<p class="muted" style="margin:12px 0 0">📍 '+esc(bz.address)+(bz.phone?' · 📞 '+esc(bz.phone):'')+'</p>':'')+'</div></div>';s.hidden=false}}
 function bizIcon(b){try{const ic=(b.business||{}).icon;if(!/^assets\/[a-z0-9_-]+\/[A-Za-z0-9._-]+-$/i.test(String(ic||'')+'-'))return;
   const base=ic.replace(/-\d+\.png$/,'');if(base===ic)return;const o=location.origin+'/';
   document.querySelector('link[rel=apple-touch-icon]').href=o+base+'-180.png';document.querySelector('link[rel=icon]').href=o+base+'-192.png';
