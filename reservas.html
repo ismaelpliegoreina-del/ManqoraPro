@@ -148,12 +148,16 @@ function total(){return S.service?+S.service.price+S.addons.reduce((a,id)=>{cons
 const svcIds=e=>Array.isArray(e.service_ids)?e.service_ids:S.biz.services.map(x=>x.id);
 const upIds=e=>Array.isArray(e.upsell_ids)?e.upsell_ids:S.biz.upsells.map(x=>x.id);
 const pros=()=>S.biz.employees.filter(e=>svcIds(e).length);
+/* «Sin preferencia»: opcional por negocio (business.anyPro). El cliente no elige profesional y se le asigna el primero libre. */
+const anyEmp=()=>({id:'any',name:'Sin preferencia',color:'#6b7280',service_ids:[...new Set(pros().flatMap(svcIds))],upsell_ids:[...new Set(pros().flatMap(upIds))]});
+const proAll=()=>{const l=pros();return(S.biz.business&&S.biz.business.anyPro&&l.length>1)?[anyEmp()].concat(l):l};
+const isAny=e=>e&&e.id==='any';
 const PAL=['#2d6a3e','#1d4ed8','#b45309','#7e22ce','#be123c','#0e7490'];
 const proColor=(e,i)=>/^#[0-9a-f]{3,8}$/i.test(String(e.color||''))?e.color:PAL[i%PAL.length];
 
 function render(){
   if(S.done)return renderDone();
-  const b=S.biz,sv=S.service,emp=S.emp?b.employees.find(x=>x.id===S.emp):null,list=pros();
+  const b=S.biz,sv=S.service,emp=S.emp?proAll().find(x=>x.id===S.emp):null,list=proAll();
   const fresh=[];
   const sec=(key,inner)=>{const isNew=!S.seen[key];if(isNew){S.seen[key]=1;fresh.push(key)}return'<div class="card'+(isNew?' reveal':'')+'" data-sec="'+key+'">'+inner+'</div>'};
   let h='';
@@ -162,20 +166,20 @@ function render(){
   /* 2 · Servicio y extras del profesional elegido */
   if(emp){
     const ok=svcIds(emp),svs=b.services.filter(x=>ok.includes(x.id)),uok=upIds(emp),ups=b.upsells.filter(u=>uok.includes(u.id));
-    let c='<h2><span class="num">2</span>Elige el servicio</h2><p class="muted" style="margin:-4px 0 10px">Con '+esc(emp.name)+'</p>'+svs.map(x=>'<button class="opt'+(sv&&sv.id===x.id?' sel':'')+'" data-svc="'+esc(x.id)+'"><span>'+esc(x.name)+'<small>'+esc(x.duration_min)+' min</small></span><span class="price">'+eur(x.price)+'</span></button>').join('');
+    let c='<h2><span class="num">2</span>Elige el servicio</h2><p class="muted" style="margin:-4px 0 10px">'+(isAny(emp)?'Con cualquier profesional del equipo':'Con '+esc(emp.name))+'</p>'+svs.map(x=>'<button class="opt'+(sv&&sv.id===x.id?' sel':'')+'" data-svc="'+esc(x.id)+'"><span>'+esc(x.name)+'<small>'+esc(x.duration_min)+' min</small></span><span class="price">'+eur(x.price)+'</span></button>').join('');
     if(sv&&ups.length)c+='<label class="f">Extras (opcional)</label>'+ups.map(u=>'<label class="check"><input type="checkbox" data-up="'+esc(u.id)+'"'+(S.addons.includes(u.id)?' checked':'')+'><span>'+esc(u.name)+' · '+eur(u.price)+(u.extra_min?' · +'+esc(u.extra_min)+' min':'')+'</span></label>').join('');
     h+=sec('svc',c);
   }
   /* 3 · Fecha */
   if(emp&&sv){
     const min=todayMadrid(),max=addDays(min,120);
-    h+=sec('day','<h2><span class="num">3</span>Elige el día</h2><label class="f" for="day">Día</label><input type="date" id="day" min="'+min+'" max="'+max+'" value="'+esc(S.day)+'">'+(S.day?'':'<p class="muted" style="margin:10px 0 0">Elige un día para ver las horas libres de '+esc(emp.name)+'.</p>'));
+    h+=sec('day','<h2><span class="num">3</span>Elige el día</h2><label class="f" for="day">Día</label><input type="date" id="day" min="'+min+'" max="'+max+'" value="'+esc(S.day)+'">'+(S.day?'':'<p class="muted" style="margin:10px 0 0">Elige un día para ver las horas libres'+(isAny(emp)?'.':' de '+esc(emp.name)+'.')+'</p>'));
   }
   /* 4 · Hora */
   if(emp&&sv&&S.day){
     let c='<h2><span class="num">4</span>Elige la hora</h2>';
     if(S.loading)c+='<p class="muted">Buscando horas libres…</p>';
-    else if(S.slots)c+=S.slots.length?'<div class="chips">'+S.slots.map(x=>'<button class="chip'+(S.slot&&S.slot.starts_at===x.starts_at?' sel':'')+'" data-slot="'+esc(x.starts_at)+'" data-emp="'+esc(x.employee_id)+'">'+esc(x.time)+'</button>').join('')+'</div>':'<div class="msg warn">No quedan horas libres ese día con '+esc(emp.name)+'. Prueba otro día.</div>';
+    else if(S.slots)c+=S.slots.length?'<div class="chips">'+S.slots.map(x=>'<button class="chip'+(S.slot&&S.slot.starts_at===x.starts_at?' sel':'')+'" data-slot="'+esc(x.starts_at)+'" data-emp="'+esc(x.employee_id)+'">'+esc(x.time)+'</button>').join('')+'</div>':'<div class="msg warn">No quedan horas libres ese día'+(isAny(emp)?'':' con '+esc(emp.name))+'. Prueba otro día.</div>';
     h+=sec('hour',c);
   }
   /* 5 · Datos */
@@ -202,7 +206,7 @@ function keepFocus(fn){const a=document.activeElement,id=a&&a.id,pos=a&&a.select
 async function loadSlots(){
   S.slot=null;S.slots=null;if(!S.service||!S.day||!S.emp){render();return}
   S.loading=true;render();
-  const r=await rpc('public_slots',{p_slug:SLUG,p_service:S.service.id,p_day:S.day,p_employee:S.emp||null,p_upsells:S.addons});
+  const r=await rpc('public_slots',{p_slug:SLUG,p_service:S.service.id,p_day:S.day,p_employee:(S.emp&&S.emp!=='any')?S.emp:null,p_upsells:S.addons});
   S.loading=false;
   if(!r.ok){S.slots=[];S.msg=ERR[r.error]||ERR.network;render();return}
   const seen=new Set();S.slots=r.slots.filter(x=>!seen.has(x.time)&&seen.add(x.time));S.msg='';render();
@@ -212,7 +216,7 @@ app.addEventListener('click',async e=>{
   const t=e.target.closest('[data-pro],[data-svc],[data-slot],#go,[data-act]');if(!t)return;
   if(t.dataset.pro){
     if(S.emp===t.dataset.pro)return;
-    const em=S.biz.employees.find(x=>x.id===t.dataset.pro);if(!em)return;
+    const em=proAll().find(x=>x.id===t.dataset.pro);if(!em)return;
     S.go=true;S.emp=em.id;S.msg='';
     if(S.service&&!svcIds(em).includes(S.service.id)){S.service=null;S.addons=[]}
     else S.addons=S.addons.filter(id=>upIds(em).includes(id));
