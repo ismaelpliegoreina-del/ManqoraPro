@@ -6,7 +6,7 @@
 <title>Manqora Pro · Reservas y gestión para barberías y peluquerías</title>
 <link rel="preload" href="assets/fonts/inter-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="assets/fonts/fonts.css">
-<meta name="description" content="Reservas online con tu marca, agenda por profesional y control del negocio en un solo panel. Pago único, sin comisiones por cita.">
+<meta name="description" content="Reservas online con tu marca, agenda por profesional y control del negocio en un solo panel. Pago único, sin comisiones por cita. Pruébalo 14 días gratis, sin tarjeta.">
 <meta property="og:title" content="Manqora Pro · Reservas y gestión para barberías y peluquerías">
 <meta property="og:description" content="Pago único, sin comisiones por cita y con tus clientes siempre tuyos.">
 <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
@@ -91,7 +91,7 @@ section{padding:84px 0}
 .note{color:var(--mut);font-size:13.5px;margin-top:14px}
 .save{margin:24px auto 0;max-width:720px;background:var(--gs);border-radius:var(--r);padding:20px 24px;text-align:center;font-weight:600}
 /* pasos */
-.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;counter-reset:s}
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;counter-reset:s}
 .step{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:26px;position:relative}
 .step::before{counter-increment:s;content:counter(s);display:grid;place-items:center;width:40px;height:40px;border-radius:50%;background:var(--g);color:#031a10;font-weight:800;margin-bottom:14px}
 .step p{margin:6px 0 0;color:var(--mut);font-size:15.5px}
@@ -148,6 +148,7 @@ footer a{color:var(--mut);margin-right:16px}
  .split{margin-bottom:60px}
  .cmp th,.cmp td{padding:12px 11px;font-size:14.5px}
 }
+@media(max-width:900px){.steps{grid-template-columns:1fr 1fr}}
 .btn.sm{white-space:nowrap;flex-shrink:0}
 .brand{min-width:0}
 @media(max-width:560px){
@@ -200,20 +201,20 @@ footer a{color:var(--mut);margin-right:16px}
 
 <nav class="top"><div class="wrap in">
   <a class="brand" href="#"><img src="assets/venta/logo.png" alt=""><span><b>MANQORA</b> PRO<small>booking &amp; management</small></span></a>
-  <ul><li><a href="#funciones">Funciones</a></li><li><a href="#comparativa">Comparativa</a></li><li><a href="#precio">Precio</a></li><li><a href="#preguntas">Preguntas</a></li></ul>
-  <a class="btn sm" href="mailto:hola@manqorapro.com?subject=Quiero%20una%20demo%20de%20Manqora%20Pro">Pide tu demo</a>
+  <ul><li><a href="#demo">Mira una demo</a></li><li><a href="#funciones">Funciones</a></li><li><a href="#comparativa">Comparativa</a></li><li><a href="#precio">Precio</a></li><li><a href="#preguntas">Preguntas</a></li></ul>
+  <a class="btn sm" href="mailto:hola@manqorapro.com?subject=Quiero%20probar%2014%20d%C3%ADas%20Manqora%20Pro">Prueba 14 días</a>
 </div></nav>
 
 <header class="hero"><div class="wrap grid">
   <div>
-    <span class="eyebrow">Para barberías y peluquerías pequeñas</span>
+    <span class="eyebrow">Para barberías y peluquerías pequeñas</span> <span class="eyebrow" style="background:#fff3d6;color:#7a5200">Precio de fundador · quedan 21 de 25 plazas</span>
     <h1 style="margin-top:18px">Que tus clientes reserven solos y <span>tú te dediques a cortar.</span></h1>
-    <p class="lead">Una página de reservas con el nombre de tu barbería, una agenda donde cada profesional ve su día y la caja al día sin hojas de cálculo. Lo pagas una vez y no hay mensualidad detrás.</p>
+    <p class="lead">Una página de reservas con el nombre de tu barbería, una agenda donde cada profesional ve su día y la caja al día sin hojas de cálculo. Lo pagas una vez y no hay mensualidad detrás. Y antes de pagar, lo pruebas 14 días con tu barbería.</p>
     <div class="cta">
-      <a class="btn" href="mailto:hola@manqorapro.com?subject=Quiero%20una%20demo%20de%20Manqora%20Pro">Pide tu demo gratis</a>
-      <a class="btn ghost" href="reservas.html?n=demo-prueba">Prueba la reserva online →</a>
+      <a class="btn" href="mailto:hola@manqorapro.com?subject=Quiero%20probar%2014%20d%C3%ADas%20Manqora%20Pro">Pruébalo 14 días gratis</a>
+      <a class="btn ghost" href="#demo">Mira cómo quedaría la tuya →</a>
     </div>
-    <ul class="ticks"><li>Sin comisiones por cita</li><li>Sin permanencia</li><li>Tus datos son tuyos</li></ul>
+    <ul class="ticks"><li>Sin tarjeta</li><li>Sin comisiones por cita</li><li>Si no te convence, no pagas</li></ul>
   </div>
   <div class="shots">
     <div class="laptop"><div class="bar"><i></i><i></i><i></i></div><img src="assets/venta/hero-agenda.jpg" alt="Agenda de la barbería con las citas de cada profesional" width="1125" height="652"></div>
@@ -238,6 +239,19 @@ footer a{color:var(--mut);margin-right:16px}
     <p style="margin-top:16px">Cortar el pelo y contestar mensajes a la vez no sale bien. Con Manqora Pro el cliente mira los huecos libres, elige y reserva. Tú te enteras en la agenda, sin soltar las tijeras.</p>
     <p>Está hecho para locales de barrio, desde un solo sillón, donde el dueño también trabaja. Por eso es sencillo y no te cobra cada mes por usarlo.</p>
     <div class="sign">Y si te atascas, te contesta una persona, no un robot.</div>
+  </div>
+</div></section>
+
+<section class="soft" id="demo"><div class="wrap">
+  <div class="head"><span class="eyebrow">Demo real</span><h2 style="margin-top:14px">Mira cómo quedaría la tuya</h2><p>Esta es Regia Barber, una barbería de ejemplo de Sevilla. La montamos en un rato con un logo, unas fotos y unos precios. La tuya sería igual, con tus datos.</p></div>
+  <div class="split">
+    <div class="txt">
+      <h2>Pruébala tú mismo, como si fueras un cliente</h2>
+      <p>Elige barbero, servicio, día y hora. Es una demo, así que puedes reservar con un email tuyo y ver el correo de confirmación que le llega al cliente.</p>
+      <ul><li>Con el logo, las fotos y los precios del local</li><li>Cada barbero con su propia agenda</li><li>Reservar le lleva al cliente un minuto</li></ul>
+      <p style="margin-top:20px"><a class="btn" href="reservas.html?n=demo-prueba">Probar la reserva de Regia Barber →</a></p>
+    </div>
+    <div class="frame phoneframe"><img src="assets/venta/regia-movil.jpg" alt="Página de reservas de Regia Barber, barbería de ejemplo, en el móvil" loading="lazy" width="780" height="1600"></div>
   </div>
 </div></section>
 
@@ -289,34 +303,47 @@ footer a{color:var(--mut);margin-right:16px}
   <table class="cmp">
     <thead><tr><th></th><th class="us">Manqora Pro</th><th>Suscripción mensual (Booksy)</th></tr></thead>
     <tbody>
-      <tr><th>Pago inicial</th><td class="us"><s style="opacity:.55">590 €</s> <b>475 €</b><small>Precio de lanzamiento</small></td><td>0 €</td></tr>
+      <tr><th>Pago inicial</th><td class="us"><s style="opacity:.55">475 €</s> <b>300 €</b><small>Precio de fundador (25 plazas)</small></td><td>0 €</td></tr>
       <tr><th>Cuota</th><td class="us">50 € al año</td><td>34,99 € al mes<small>+ 8 € al mes por cada profesional extra</small></td></tr>
-      <tr><th>Coste en 3 años · 1 profesional</th><td class="us">625 €</td><td>1.259,64 €</td></tr>
-      <tr><th>Coste en 3 años · 3 profesionales</th><td class="us">625 €</td><td>1.835,64 €</td></tr>
+      <tr><th>Coste en 3 años · 1 profesional</th><td class="us">450 €</td><td>1.259,64 €</td></tr>
+      <tr><th>Coste en 3 años · 3 profesionales</th><td class="us">450 €</td><td>1.835,64 €</td></tr>
       <tr><th>Comisión por cita</th><td class="us">Ninguna</td><td>Ninguna por defecto<small>Si activas su opción Boost: 30 % de la primera visita (máx. 50 €)</small></td></tr>
       <tr><th>Web de reservas con tu marca</th><td class="us">Sí, con tu logo y tus fotos</td><td>Perfil dentro de su plataforma</td></tr>
       <tr><th>Marketplace donde te encuentran clientes nuevos</th><td class="us">No<small>Tus clientes llegan por tus enlaces, tus redes y Google</small></td><td>Sí</td></tr>
     </tbody>
   </table>
-  <p class="note">Precios de Booksy según <a href="https://biz.booksy.com/es-es/precios" rel="noopener" target="_blank">su web</a>, consultados el 23/10/2026; IVA no incluido. Manqora Pro: 475 € de pago único (precio de lanzamiento; precio habitual 590 €) más 50 € al año, IVA no incluido; a 3 años se cuentan tres cuotas.</p>
-  <div class="save">Con un solo profesional ahorras unos 630 € en tres años. Con tres, más de 1.200 €.</div>
+  <p class="note">Precios de Booksy según <a href="https://biz.booksy.com/es-es/precios" rel="noopener" target="_blank">su web</a>, consultados el 23/10/2026; IVA no incluido. Manqora Pro: 300 € de pago único (precio de fundador para las 25 primeras barberías; después, 475 €) más 50 € al año, IVA no incluido; a 3 años se cuentan tres cuotas.</p>
+  <div class="save">Con un solo profesional ahorras unos 810 € en tres años. Con tres, casi 1.400 €.</div>
+</div></section>
+
+<section id="kit"><div class="wrap">
+  <div class="split rev">
+    <div class="txt">
+      <h2>Que la primera reserva llegue el primer día</h2>
+      <p>No te dejamos solo con el enlace. Te preparamos lo necesario para que tus clientes lo encuentren desde hoy.</p>
+      <ul><li>Un cartel con tu código QR para el espejo y el mostrador</li><li>El texto listo para la bio de tu Instagram</li><li>Una respuesta automática para WhatsApp con tu enlace</li><li>Cómo poner el enlace en tu ficha de Google</li></ul>
+    </div>
+    <div class="frame phoneframe"><img src="assets/venta/cartel-qr.jpg" alt="Cartel de ejemplo con código QR para reservar" loading="lazy" width="800" height="1100"></div>
+  </div>
 </div></section>
 
 <section class="soft"><div class="wrap">
-  <div class="head"><h2>Cómo empezamos</h2><p>No hace falta que sepas de informática. Nos sentamos contigo y lo montamos.</p></div>
+  <div class="head"><h2>Cómo empezamos</h2><p>No hace falta que sepas de informática. Lo montamos nosotros y tú lo pruebas.</p></div>
   <div class="steps">
-    <div class="step"><h3>Lo dejamos listo contigo</h3><p>Tú nos cuentas tus servicios, horarios y equipo, y nos pasas tu logo y tus fotos. Si tienes clientes en otra app, los traemos.</p></div>
-    <div class="step"><h3>Compartes tu enlace</h3><p>Lo pones en tu Instagram, en WhatsApp y en Google. A partir de ahí, la gente reserva sin llamarte.</p></div>
-    <div class="step"><h3>Gestionas desde el panel</h3><p>Agenda, cobros y números, desde el ordenador o el móvil. Si algo no te cuadra, nos escribes.</p></div>
+    <div class="step"><h3>Nos cuentas lo básico</h3><p>Tus servicios, horarios y equipo, y tu logo y tus fotos. Con un WhatsApp es suficiente.</p></div>
+    <div class="step"><h3>Te enseñamos tu demo</h3><p>En uno o dos días ves tu barbería montada, con tu nombre y tus precios, lista para probar.</p></div>
+    <div class="step"><h3>La pruebas 14 días</h3><p>Sin tarjeta y sin compromiso. Compartes el enlace y ves cómo reservan tus clientes.</p></div>
+    <div class="step"><h3>Si te gusta, te quedas</h3><p>Pagas una vez y sigues con lo que ya tienes montado. Si no te convence, no pagas nada.</p></div>
   </div>
 </div></section>
 
 <section id="precio"><div class="wrap">
-  <div class="head"><span class="eyebrow">Precio</span><h2 style="margin-top:14px">Un pago y una cuota pequeña</h2><p>Sin permanencia. Lo que ves aquí es lo que pagas.</p></div>
+  <div class="head"><span class="eyebrow">Precio</span><h2 style="margin-top:14px">Un pago y una cuota pequeña</h2><p>Sin permanencia. Lo que ves aquí es lo que pagas, y solo si después de probarlo te quedas.</p></div>
   <div class="price">
-    <div class="was" style="font-size:22px;font-weight:700;color:var(--mut)"><s>590 €</s> <span style="display:inline-block;background:var(--gs);color:var(--gd);font-size:13px;font-weight:800;padding:3px 10px;border-radius:99px;vertical-align:middle;margin-left:6px">Precio de lanzamiento</span></div>
-    <div class="big">475 € <small>pago único</small></div>
+    <div class="was" style="font-size:22px;font-weight:700;color:var(--mut)"><s>475 €</s> <span style="display:inline-block;background:#fff3d6;color:#7a5200;font-size:13px;font-weight:800;padding:3px 10px;border-radius:99px;vertical-align:middle;margin-left:6px">Precio de fundador</span></div>
+    <div class="big">300 € <small>pago único</small></div>
     <p class="yr">+ 50 € al año de mantenimiento</p>
+    <p style="margin:6px 0 14px;font-weight:700;color:#7a5200">Quedan 21 de 25 plazas de fundador. Después, <span style="white-space:nowrap">475 €</span>.</p>
     <ul>
       <li>Reservas online con tu marca, tu logo y tus fotos</li>
       <li>Panel completo: agenda, registro de cobros, clientes, stock y gastos</li>
@@ -326,14 +353,17 @@ footer a{color:var(--mut);margin-right:16px}
       <li>Alojamiento, actualizaciones y copia de seguridad</li>
       <li>Soporte por email</li>
     </ul>
-    <a class="btn" href="mailto:hola@manqorapro.com?subject=Quiero%20Manqora%20Pro">Quiero mi demo</a>
-    <p class="note">IVA no incluido. Dominio propio (tunegocio.es) opcional: consúltanos.</p>
+    <a class="btn" href="mailto:hola@manqorapro.com?subject=Quiero%20probar%2014%20d%C3%ADas%20Manqora%20Pro">Pruébalo 14 días gratis</a>
+    <p class="note">Sin tarjeta para probar. Si en 14 días no te convence, no pagas nada. IVA no incluido. Dominio propio (tunegocio.es) opcional: consúltanos.</p>
   </div>
 </div></section>
 
 <section class="soft" id="preguntas"><div class="wrap">
   <div class="head"><h2>Preguntas frecuentes</h2></div>
   <div class="faq">
+        <details><summary>¿Y si lo pruebo y no me convence?</summary><p>No pasa nada y no pagas nada. Son 14 días sin tarjeta, con tu barbería montada. Si no es para ti, lo dejamos y borramos lo que hayamos preparado.</p></details>
+    <details><summary>¿Qué es el precio de fundador?</summary><p>Las 25 primeras barberías pagan 300 € en vez de 475 €, una sola vez. Cuando se acaben las plazas, el precio pasa a ser el normal. Ahora quedan 21.</p></details>
+    <details><summary>¿Mis clientes tienen que instalar algo?</summary><p>No. Reservan desde una página web, con el móvil que ya tienen. Les llega un email de confirmación y otro de recordatorio.</p></details>
     <details><summary>¿Pago por cada cita o por cada cliente nuevo?</summary><p>No. No cobramos nada por cita ni por cliente. Pagas una vez y luego la cuota del año.</p></details>
     <details><summary>¿Qué incluye la cuota anual?</summary><p>Alojamiento, mantenimiento, actualizaciones, copia de seguridad y soporte por email. Las mejoras que no sean arreglos se presupuestan aparte.</p></details>
     <details><summary>¿Puedo traer mis clientes de otra aplicación?</summary><p>Sí. Si puedes exportarlos a un archivo de Excel o CSV, los importamos al empezar.</p></details>
@@ -346,9 +376,9 @@ footer a{color:var(--mut);margin-right:16px}
 
 <section style="padding-top:40px"><div class="wrap" style="padding:0">
   <div class="final photo" style="--bg:url(assets/venta/foto2.jpg)">
-    <h2>¿Lo vemos juntos con tu local?</h2>
-    <p>Escríbenos, te enseñamos el panel funcionando y te decimos con sinceridad si te encaja o no.</p>
-    <a class="btn" href="mailto:hola@manqorapro.com?subject=Quiero%20una%20demo%20de%20Manqora%20Pro">Pide tu demo gratis</a>
+    <h2>¿La probamos con tu local?</h2>
+    <p>Escríbenos y en uno o dos días ves tu barbería montada. 14 días gratis, sin tarjeta, y si no te encaja te lo decimos con sinceridad.</p>
+    <a class="btn" href="mailto:hola@manqorapro.com?subject=Quiero%20probar%2014%20d%C3%ADas%20Manqora%20Pro">Pruébalo 14 días gratis</a>
   </div>
 </div></section>
 
