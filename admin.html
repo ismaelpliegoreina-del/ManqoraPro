@@ -1386,7 +1386,7 @@ function legalDoc(k){
 <h3>Responsable</h3><p>${nm} · ${dir} · ${em}.</p>`}
 function openLegal(k){
   if(!LEGAL_T[k])return;const L=legalCfg();
-  openModal(`<h2>${LEGAL_T[k]}</h2>${L.reviewed?'':'<div class="notice" style="margin-bottom:10px"><b>BORRADOR</b> · Texto generado automáticamente con los datos del negocio. Debe revisarlo tu gestor o abogado antes de publicarlo.</div>'}<div class="legal-doc" style="font-size:14px;line-height:1.5">${legalDoc(k)}</div><div class="actions" style="margin-top:15px"><button class="btn" onclick="closeModal()">Cerrar</button></div>`)}
+  openModal(`<h2>${LEGAL_T[k]}</h2><div class="legal-doc" style="font-size:14px;line-height:1.5">${legalDoc(k)}</div><div class="actions" style="margin-top:15px"><button class="btn" onclick="closeModal()">Cerrar</button></div>`)}
 function legalLinks(sep){return Object.keys(LEGAL_T).map(k=>`<a href="#legal=${k}" onclick="openLegal('${k}');return false" style="color:inherit;text-decoration:underline">${LEGAL_T[k]}</a>`).join(sep||' · ')}
 function legalFoot(el){if(!el||el.querySelector('.legalfoot'))return;el.insertAdjacentHTML('beforeend',`<div class="legalfoot" style="text-align:center;font-size:12px;color:#94a3b8;padding:22px 16px 30px">${legalLinks()}<div style="margin-top:6px">${esc(db.business.name)} · Manqora Pro ${VERSION}</div></div>`)}
 function legalMissing(){const b=db.business,m=[];if(!b.name)m.push('nombre');if(!b.cif)m.push('CIF/NIF');if(!b.address)m.push('dirección');if(!b.email)m.push('email');return m}
@@ -1397,7 +1397,7 @@ ${miss.length?`<div class="notice" style="margin-bottom:10px">Faltan datos del n
 <div class="actions" style="flex-wrap:wrap;justify-content:flex-start;margin-bottom:10px">${Object.keys(LEGAL_T).map(k=>`<button class="btn" onclick="openLegal('${k}')">${LEGAL_T[k]}</button>`).join('')}</div>
 <div class="form g2"><div><label>Datos registrales (opcional, para el aviso legal)</label><input id="lgReg" value="${esc(L.registry)}" onchange="legalSet('registry',this.value.trim())" placeholder="Registro Mercantil de…"></div>
 <div><label style="display:flex;gap:8px;align-items:center;font-weight:600;margin-top:24px"><input id="lgRev" type="checkbox" style="width:auto" ${L.reviewed?'checked':''} onchange="legalSet('reviewed',this.checked)"> Revisado por mi gestor/abogado</label></div></div>
-<div class="small muted" style="margin-top:8px">Mientras no marques «revisado», los textos se muestran como <b>borrador</b>. Son una plantilla general: no sustituyen el asesoramiento legal.</div></div>`}
+<div class="small muted" style="margin-top:8px">Son una plantilla general: conviene que tu gestor o abogado los revise. No sustituyen el asesoramiento legal.</div></div>`}
 function legalSet(k,v){legalCfg()[k]=v;save();toast('Guardado')}
 window.addEventListener('hashchange',()=>{const m=/^#legal=(\w+)$/.exec(location.hash);if(m&&LEGAL_T[m[1]])legalRoute()});
 function legalRoute(){const m=/^#legal=(\w+)$/.exec(location.hash);if(!m||!LEGAL_T[m[1]])return false;['login','admin','mycita'].forEach(i=>{const e=document.getElementById(i);e&&e.classList.add('hide')});document.getElementById('public').classList.remove('hide');renderPublic();openLegal(m[1]);return true}

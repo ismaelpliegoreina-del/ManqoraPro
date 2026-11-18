@@ -75,13 +75,18 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
 footer{max-width:640px;margin:0 auto;padding:0 16px 30px;color:var(--muted);font-size:13px;text-align:center}
 footer a{color:inherit}
 .hp{position:absolute;left:-9999px;opacity:0}
+.pv{position:fixed;inset:0;z-index:50;background:rgba(15,23,42,.55);display:flex;align-items:flex-end;justify-content:center}
+.pv>div{background:#fff;width:100%;max-width:560px;max-height:88vh;overflow:auto;border-radius:18px 18px 0 0;padding:20px 20px 28px;box-shadow:0 -10px 40px rgba(0,0,0,.25)}
+@media(min-width:600px){.pv{align-items:center}.pv>div{border-radius:18px;max-height:84vh}}
+.pv h2{margin:0 0 8px;font-size:21px}.pv h3{font-size:15px;margin:16px 0 4px}.pv p{margin:0 0 8px;font-size:14.5px;line-height:1.55;color:#374151}
+.pv .x{position:sticky;top:0;float:right;margin:-6px -6px 0 8px}
 </style>
 </head>
 <body>
 <header class="top" id="top"><div class="in"><div class="lp" id="lp" hidden></div><h1 id="biz">Reserva tu cita</h1><p id="bizsub">&nbsp;</p><a class="maps" id="maps" target="_blank" rel="noopener" hidden>📍 Cómo llegar</a></div></header>
 <main class="wrap" id="app"><div class="card"><p class="muted">Cargando…</p></div></main>
 <section class="wrap local" id="local" hidden style="padding-top:0"></section>
-<footer>Reservas gestionadas con Manqora Pro · <a id="lg" href="admin.html#legal=priv" target="_blank" rel="noopener">Privacidad</a></footer>
+<footer>Reservas gestionadas con Manqora Pro · <a id="lg" href="#privacidad" data-priv>Privacidad</a></footer>
 
 <script>
 'use strict';
@@ -191,7 +196,7 @@ function render(){
      +'<label class="f" for="phone">Teléfono móvil</label><input type="tel" id="phone" autocomplete="tel" inputmode="tel" maxlength="20" value="'+esc(S.phone)+'">'
      +'<label class="f" for="email">Email (te enviaremos la confirmación)</label><input type="email" id="email" autocomplete="email" maxlength="120" value="'+esc(S.email)+'">'
      +'<input class="hp" type="text" id="website" tabindex="-1" autocomplete="off" aria-hidden="true">'
-     +'<label class="check"><input type="checkbox" id="priv"'+(S.priv?' checked':'')+'><span>He leído y acepto la <a href="admin.html#legal=priv" target="_blank" rel="noopener">política de privacidad</a>. *</span></label>';
+     +'<label class="check"><input type="checkbox" id="priv"'+(S.priv?' checked':'')+'><span>He leído y acepto la <a href="#privacidad" data-priv>política de privacidad</a>. *</span></label>';
     if(S.msg)c+='<div class="msg err" role="alert">'+esc(S.msg)+'</div>';
     c+='<button class="btn" id="go"'+(S.busy?' disabled':'')+'>'+(S.busy?'Reservando…':'Confirmar reserva')+'</button>';
     c+='<p class="muted" style="margin-top:10px">Puedes cancelar o cambiar tu cita online hasta '+esc(b.cancel_min_hours)+' horas antes.</p>';
@@ -204,6 +209,26 @@ function render(){
     if(k==='day'){const ex=app.querySelector('[data-sec="svc"] label.f');if(ex&&app.querySelector('[data-sec="svc"] [data-up]')){el=ex;el.style.scrollMarginTop='14px'}}
     if(el&&k!=='pro'){const rm=window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches;setTimeout(()=>el.scrollIntoView({behavior:rm?'auto':'smooth',block:'start'}),60)}}
 }
+/* política de privacidad: se abre aquí mismo, con los datos del negocio, sin salir de la reserva */
+function openPriv(){
+  const b=(S.biz&&S.biz.business)||{},nm=esc(b.name||(S.biz&&S.biz.name)||'El negocio'),cif=b.cif&&String(b.cif).trim()?' · CIF/NIF '+esc(b.cif):'',dir=b.address?' · '+esc(b.address):'',em=b.email?esc(b.email):'',tel=b.phone?' · Tel. '+esc(b.phone):'';
+  const ct=em?'escribiendo a '+em:'poniéndote en contacto con el negocio';
+  const o=document.createElement('div');o.className='pv';o.setAttribute('role','dialog');o.setAttribute('aria-modal','true');o.setAttribute('aria-label','Política de privacidad');
+  o.innerHTML='<div><button type="button" class="btn ghost x" style="width:auto;padding:8px 14px">Cerrar</button><h2>Política de privacidad</h2>'
+  +'<h3>1. Responsable del tratamiento</h3><p>'+nm+cif+dir+(em?' · Email: '+em:'')+tel+'.</p>'
+  +'<h3>2. Qué datos tratamos</h3><p>Los que nos facilitas al reservar o en el local: nombre, teléfono, email, notas que quieras indicarnos y el historial de tus citas y compras en el negocio.</p>'
+  +'<h3>3. Para qué los usamos</h3><p>Gestionar tu reserva y tu cita; enviarte por email la confirmación, los cambios, los recordatorios y el enlace para cambiar o cancelar tu cita; y cumplir las obligaciones legales del negocio.</p>'
+  +'<h3>4. Base jurídica</h3><p>La ejecución del servicio que solicitas (art. 6.1.b RGPD), el cumplimiento de obligaciones legales fiscales y mercantiles (art. 6.1.c) y tu consentimiento al marcar la casilla de la reserva (art. 6.1.a).</p>'
+  +'<h3>5. A quién comunicamos tus datos</h3><p>No cedemos tus datos a terceros salvo obligación legal. Utilizamos proveedores tecnológicos que actúan como encargados del tratamiento y solo tratan los datos siguiendo nuestras instrucciones: Manqora Pro (herramienta de reservas y gestión), alojamiento y base de datos en la Unión Europea, envío de correo electrónico y, en su caso, nuestra asesoría fiscal y contable.</p>'
+  +'<h3>6. Cuánto tiempo los conservamos</h3><p>Los datos de contacto, mientras mantengas relación con el negocio y hasta que pidas su supresión. Los datos de cobros, durante los plazos que exigen la normativa fiscal y mercantil (hasta 6 años); transcurrido ese tiempo se eliminan.</p>'
+  +'<h3>7. Transferencias internacionales</h3><p>El envío de los correos de tu cita lo realiza un proveedor que puede tratar datos fuera de la Unión Europea, con las garantías que exige el RGPD (cláusulas contractuales tipo o decisión de adecuación).</p>'
+  +'<h3>8. Tus derechos</h3><p>Puedes ejercer los derechos de acceso, rectificación, supresión, oposición, limitación y portabilidad '+ct+', indicando tu nombre y teléfono. Si crees que no tratamos bien tus datos, puedes reclamar ante la Agencia Española de Protección de Datos (www.aepd.es).</p></div>';
+  const close=()=>{o.remove();document.removeEventListener('keydown',kd);if(prev&&prev.focus)prev.focus()},prev=document.activeElement;
+  const kd=e=>{if(e.key==='Escape')close()};
+  o.addEventListener('click',e=>{if(e.target===o||e.target.closest('.x'))close()});document.addEventListener('keydown',kd);
+  document.body.appendChild(o);o.querySelector('.x').focus();
+}
+document.addEventListener('click',e=>{const a=e.target.closest&&e.target.closest('[data-priv]');if(a){e.preventDefault();openPriv()}});
 function keepFocus(fn){const a=document.activeElement,id=a&&a.id,pos=a&&a.selectionStart;fn();if(id){const e=document.getElementById(id);if(e&&e.focus){e.focus();try{if(pos!=null)e.setSelectionRange(pos,pos)}catch(_){}}}}
 
 async function loadSlots(){
