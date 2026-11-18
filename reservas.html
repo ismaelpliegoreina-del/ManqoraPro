@@ -199,7 +199,10 @@ function render(){
   }else if(S.msg){h+='<div class="msg err" role="alert" style="margin-top:14px">'+esc(S.msg)+'</div>'}
   keepFocus(()=>{app.innerHTML=h});
   /* al abrirse un paso nuevo, llevar la vista hasta él (solo si es una acción del cliente, no la carga inicial) */
-  if(S.go&&fresh.length){const el=app.querySelector('[data-sec="'+fresh[fresh.length-1]+'"]');if(el&&fresh[fresh.length-1]!=='pro'){const rm=window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches;setTimeout(()=>el.scrollIntoView({behavior:rm?'auto':'smooth',block:'start'}),60)}}
+  if(S.go&&fresh.length){const k=fresh[fresh.length-1];let el=app.querySelector('[data-sec="'+k+'"]');
+    /* al elegir servicio se abre el paso 3, pero si hay extras se muestran los extras primero (si no, se saltan sin verlos) */
+    if(k==='day'){const ex=app.querySelector('[data-sec="svc"] label.f');if(ex&&app.querySelector('[data-sec="svc"] [data-up]')){el=ex;el.style.scrollMarginTop='14px'}}
+    if(el&&k!=='pro'){const rm=window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches;setTimeout(()=>el.scrollIntoView({behavior:rm?'auto':'smooth',block:'start'}),60)}}
 }
 function keepFocus(fn){const a=document.activeElement,id=a&&a.id,pos=a&&a.selectionStart;fn();if(id){const e=document.getElementById(id);if(e&&e.focus){e.focus();try{if(pos!=null)e.setSelectionRange(pos,pos)}catch(_){}}}}
 
